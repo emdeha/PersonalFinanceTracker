@@ -22,7 +22,7 @@ function PageTwo() {
   return <div>Page Two</div>
 }
 
-let router = createBrowserRouter([
+const router = createBrowserRouter([
   {
     path: '/',
     Component: Home,
