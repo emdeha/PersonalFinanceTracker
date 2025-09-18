@@ -22,8 +22,6 @@ function PageTwo() {
   return <div>Page Two</div>
 }
 
-
-
 const router = createBrowserRouter([
   {
     path: '/',
