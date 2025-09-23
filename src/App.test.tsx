@@ -3,8 +3,8 @@ import App from './App.tsx';
 
 describe('App', () => {
   it('renders Home', () => {
-    render(<App />)
+    render(<App />);
 
-    expect(screen.getByText(/home/i)).toBeInTheDocument()
+    expect(screen.getByText(/home/i)).toBeInTheDocument();
   })
 })
