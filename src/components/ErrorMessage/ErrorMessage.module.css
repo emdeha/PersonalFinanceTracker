@@ -1,0 +1,11 @@
+.error {
+  background-color: var(--brutalist-error-bg);
+  color: var(--brutalist-error-text);
+  border: var(--border-emphasis);
+  padding: var(--space-2) var(--space-3);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+  margin: var(--space-3) 0;
+  letter-spacing: 0.05em;
+}

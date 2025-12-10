@@ -3,6 +3,7 @@ import './App.css'
 import { Button } from './components/Button/Button'
 import { Input } from './components/Input/Input'
 import { ExpenseHeader } from './components/ExpenseHeader/ExpenseHeader'
+import { ErrorMessage } from './components/ErrorMessage/ErrorMessage'
 
 type Expense = {
   readonly name: string
@@ -86,9 +87,7 @@ function App() {
       </div>
 
       {errorMessage && (
-        <div data-testid="error-message">
-          {errorMessage}
-        </div>
+        <ErrorMessage message={errorMessage} testId="error-message" />
       )}
 
       <div data-testid="expense-list">
