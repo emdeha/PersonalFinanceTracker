@@ -1,0 +1,30 @@
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-bottom: var(--border-default);
+  transition: none;
+}
+
+.item:hover {
+  background-color: var(--brutalist-primary);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.name {
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+}
+
+.amount {
+  font-weight: var(--font-weight-bold);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-base);
+}

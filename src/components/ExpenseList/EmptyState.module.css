@@ -1,0 +1,9 @@
+.empty {
+  text-align: center;
+  padding: var(--space-6);
+  color: var(--brutalist-gray);
+  text-transform: uppercase;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.1em;
+}

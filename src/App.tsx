@@ -4,11 +4,8 @@ import { Button } from './components/Button/Button'
 import { Input } from './components/Input/Input'
 import { ExpenseHeader } from './components/ExpenseHeader/ExpenseHeader'
 import { ErrorMessage } from './components/ErrorMessage/ErrorMessage'
-
-type Expense = {
-  readonly name: string
-  readonly amount: number
-}
+import { ExpenseList } from './components/ExpenseList/ExpenseList'
+import type { Expense } from './types/expense.types'
 
 function App() {
   const [expenseName, setExpenseName] = useState('')
@@ -90,17 +87,7 @@ function App() {
         <ErrorMessage message={errorMessage} testId="error-message" />
       )}
 
-      <div data-testid="expense-list">
-        {expenses.length === 0 ? (
-          <div>No expenses added yet</div>
-        ) : (
-          expenses.map((expense, index) => (
-            <div key={index}>
-              {expense.name}: {expense.amount.toFixed(2)}
-            </div>
-          ))
-        )}
-      </div>
+      <ExpenseList expenses={expenses} testId="expense-list" />
     </div>
   )
 }

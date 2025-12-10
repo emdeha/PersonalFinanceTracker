@@ -1,0 +1,5 @@
+.list {
+  border: var(--border-emphasis);
+  background-color: var(--brutalist-white);
+  margin: var(--space-4) 0;
+}
