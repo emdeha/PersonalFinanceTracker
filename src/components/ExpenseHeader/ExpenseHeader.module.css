@@ -1,0 +1,11 @@
+.header {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-black);
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+  color: var(--brutalist-black);
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--border-width-heavy) solid var(--brutalist-primary);
+  letter-spacing: -0.02em;
+}

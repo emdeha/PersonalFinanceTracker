@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import { Button } from './components/Button/Button'
 import { Input } from './components/Input/Input'
+import { ExpenseHeader } from './components/ExpenseHeader/ExpenseHeader'
 
 type Expense = {
   readonly name: string
@@ -60,7 +61,7 @@ function App() {
 
   return (
     <div>
-      <h1>Personal Finance Tracker</h1>
+      <ExpenseHeader title="Personal Finance Tracker" />
 
       <div>
         <Input
