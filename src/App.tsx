@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import { Button } from './components/Button/Button'
+import { Input } from './components/Input/Input'
 
 type Expense = {
   readonly name: string
@@ -62,19 +63,19 @@ function App() {
       <h1>Personal Finance Tracker</h1>
 
       <div>
-        <input
-          data-testid="expense-name-input"
+        <Input
+          testId="expense-name-input"
           type="text"
           value={expenseName}
-          onChange={(e) => setExpenseName(e.target.value)}
+          onChange={setExpenseName}
           placeholder="Expense name"
         />
 
-        <input
-          data-testid="expense-amount-input"
+        <Input
+          testId="expense-amount-input"
           type="number"
           value={expenseAmount}
-          onChange={(e) => setExpenseAmount(e.target.value)}
+          onChange={setExpenseAmount}
           placeholder="Amount"
         />
 

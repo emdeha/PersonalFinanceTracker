@@ -1,0 +1,28 @@
+.input {
+  background-color: var(--brutalist-white);
+  color: var(--brutalist-black);
+  border: var(--border-default);
+  padding: var(--space-2);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  width: 100%;
+  transition: none;
+}
+
+.input:focus {
+  border-width: var(--border-width-thick);
+  border-color: var(--brutalist-primary);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--brutalist-gray);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+
+.input:hover {
+  border-color: var(--brutalist-secondary);
+}
