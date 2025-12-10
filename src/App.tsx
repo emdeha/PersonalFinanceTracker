@@ -56,6 +56,11 @@ function App() {
     setErrorMessage('')
   }
 
+  const handleRemoveExpense = (indexToRemove: number) => {
+    setExpenses(expenses.filter((_, index) => index !== indexToRemove))
+    setErrorMessage('')
+  }
+
   return (
     <div>
       <h1>Personal Finance Tracker</h1>
@@ -97,7 +102,13 @@ function App() {
         ) : (
           expenses.map((expense, index) => (
             <div key={index}>
-              {expense.name}: {expense.amount.toFixed(2)}
+              <span>{expense.name}: {expense.amount.toFixed(2)}</span>
+              <button
+                data-testid="remove-expense-button"
+                onClick={() => handleRemoveExpense(index)}
+              >
+                Remove
+              </button>
             </div>
           ))
         )}
