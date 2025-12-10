@@ -2,9 +2,9 @@ import {screen, render} from '@testing-library/react';
 import App from './App.tsx';
 
 describe('App', () => {
-  it('renders Home', () => {
+  it('renders Personal Finance Tracker', () => {
     render(<App />);
 
-    expect(screen.getByText(/home/i)).toBeInTheDocument();
+    expect(screen.getByText(/personal finance tracker/i)).toBeInTheDocument();
   })
 })

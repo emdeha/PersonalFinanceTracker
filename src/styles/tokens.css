@@ -1,0 +1,59 @@
+:root {
+  /* Color Palette - "Concrete & Volt" Brutalist */
+  --brutalist-primary: #FFE900;
+  --brutalist-primary-dark: #E6D200;
+  --brutalist-secondary: #0A0A0A;
+  --brutalist-secondary-light: #1A1A1A;
+  --brutalist-black: #000000;
+  --brutalist-white: #FFFFFF;
+  --brutalist-error-bg: #FFE900;
+  --brutalist-error-text: #0A0A0A;
+  --brutalist-gray: #666666;
+
+  /* Typography */
+  --font-family-primary: 'IBM Plex Mono', 'Courier New', 'Courier', monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 3rem;
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+
+  /* Spacing (8px base) */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-6: 3rem;
+  --space-8: 4rem;
+
+  /* Borders */
+  --border-width-thin: 2px;
+  --border-width-thick: 4px;
+  --border-width-heavy: 6px;
+  --border-style: solid;
+  --border-radius: 0;
+  --border-default: var(--border-width-thin) solid var(--brutalist-black);
+  --border-emphasis: var(--border-width-thick) solid var(--brutalist-black);
+  --border-heavy: var(--border-width-heavy) solid var(--brutalist-black);
+
+  /* Layout */
+  --layout-max-width: 800px;
+  --layout-padding: var(--space-6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --brutalist-primary: #FFE900;
+    --brutalist-secondary: #0A0A0A;
+    --brutalist-black: #000000;
+    --brutalist-white: #FFFFFF;
+  }
+}
