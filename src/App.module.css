@@ -1,0 +1,11 @@
+.container {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: var(--layout-padding);
+  background-color: var(--brutalist-white);
+  border: var(--border-heavy);
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0;
+}

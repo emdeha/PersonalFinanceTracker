@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import './App.css'
+import styles from './App.module.css'
 import { ExpenseHeader } from './components/ExpenseHeader/ExpenseHeader'
 import { ExpenseForm } from './components/ExpenseForm/ExpenseForm'
 import { ErrorMessage } from './components/ErrorMessage/ErrorMessage'
@@ -53,7 +53,7 @@ function App() {
   }
 
   return (
-    <div>
+    <div className={styles.container}>
       <ExpenseHeader title="Personal Finance Tracker" />
 
       <ExpenseForm onAddExpense={handleAddExpense} />
