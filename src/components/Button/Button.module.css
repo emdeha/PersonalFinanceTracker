@@ -1,0 +1,26 @@
+.button {
+  background-color: var(--brutalist-primary);
+  color: var(--brutalist-black);
+  border: var(--border-emphasis);
+  padding: var(--space-2) var(--space-4);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: none;
+  font-family: var(--font-family-primary);
+}
+
+.button:hover {
+  background-color: var(--brutalist-black);
+  color: var(--brutalist-primary);
+}
+
+.button:focus {
+  outline: var(--border-emphasis) solid var(--brutalist-primary);
+  outline-offset: 4px;
+}
+
+.button:active {
+  transform: translate(2px, 2px);
+}

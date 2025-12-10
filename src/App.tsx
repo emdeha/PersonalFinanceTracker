@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import { Button } from './components/Button/Button'
 
 type Expense = {
   readonly name: string
@@ -77,12 +78,9 @@ function App() {
           placeholder="Amount"
         />
 
-        <button
-          data-testid="add-expense-button"
-          onClick={handleAddExpense}
-        >
+        <Button testId="add-expense-button" onClick={handleAddExpense}>
           Add Expense
-        </button>
+        </Button>
       </div>
 
       {errorMessage && (
