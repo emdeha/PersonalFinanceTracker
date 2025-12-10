@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import './App.css'
-import { Button } from './components/Button/Button'
-import { Input } from './components/Input/Input'
 import { ExpenseHeader } from './components/ExpenseHeader/ExpenseHeader'
+import { ExpenseForm } from './components/ExpenseForm/ExpenseForm'
 import { ErrorMessage } from './components/ErrorMessage/ErrorMessage'
 import { ExpenseList } from './components/ExpenseList/ExpenseList'
 import type { Expense } from './types/expense.types'
 
 function App() {
-  const [expenseName, setExpenseName] = useState('')
-  const [expenseAmount, setExpenseAmount] = useState('')
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -33,27 +30,25 @@ function App() {
     return null
   }
 
-  const handleAddExpense = () => {
-    const nameError = validateExpenseName(expenseName)
+  const handleAddExpense = (options: { name: string; amount: string }) => {
+    const nameError = validateExpenseName(options.name)
     if (nameError) {
       setErrorMessage(nameError)
       return
     }
 
-    const amountError = validateExpenseAmount(expenseAmount)
+    const amountError = validateExpenseAmount(options.amount)
     if (amountError) {
       setErrorMessage(amountError)
       return
     }
 
     const newExpense: Expense = {
-      name: expenseName,
-      amount: parseFloat(expenseAmount),
+      name: options.name,
+      amount: parseFloat(options.amount),
     }
 
     setExpenses([...expenses, newExpense])
-    setExpenseName('')
-    setExpenseAmount('')
     setErrorMessage('')
   }
 
@@ -61,27 +56,7 @@ function App() {
     <div>
       <ExpenseHeader title="Personal Finance Tracker" />
 
-      <div>
-        <Input
-          testId="expense-name-input"
-          type="text"
-          value={expenseName}
-          onChange={setExpenseName}
-          placeholder="Expense name"
-        />
-
-        <Input
-          testId="expense-amount-input"
-          type="number"
-          value={expenseAmount}
-          onChange={setExpenseAmount}
-          placeholder="Amount"
-        />
-
-        <Button testId="add-expense-button" onClick={handleAddExpense}>
-          Add Expense
-        </Button>
-      </div>
+      <ExpenseForm onAddExpense={handleAddExpense} />
 
       {errorMessage && (
         <ErrorMessage message={errorMessage} testId="error-message" />
