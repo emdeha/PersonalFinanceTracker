@@ -1,15 +1,8 @@
-import './App.css'
+import "./App.css";
+import { ExpenseTracker } from "./features/expense-tracking";
 
 function App() {
-  return <Home />
+  return <ExpenseTracker />;
 }
 
-function Home() {
-  return (
-    <>
-      <div>Home</div>
-    </>
-  )
-}
-
-export default App
+export default App;
