@@ -1,10 +1,12 @@
-import {screen, render} from '@testing-library/react';
-import App from './App.tsx';
+import { screen, render } from "@testing-library/react";
+import App from "./App.tsx";
 
-describe('App', () => {
-  it('renders Home', () => {
+describe("App", () => {
+  it("renders ExpenseTracker", () => {
     render(<App />);
 
-    expect(screen.getByText(/home/i)).toBeInTheDocument();
-  })
-})
+    expect(screen.getByTestId("expense-name-input")).toBeInTheDocument();
+    expect(screen.getByTestId("expense-amount-input")).toBeInTheDocument();
+    expect(screen.getByTestId("add-expense-button")).toBeInTheDocument();
+  });
+});
