@@ -129,3 +129,71 @@ describe("POST /api/expenses", () => {
     });
   });
 });
+
+describe("GET /api/expenses", () => {
+  beforeEach(() => {
+    resetExpenseStore();
+  });
+
+  it("returns 200 with an empty array when the store is empty", async () => {
+    const response = await request(app).get("/api/expenses");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toMatch(/application\/json/);
+    expect(response.body).toEqual([]);
+  });
+
+  it("returns the created expense after one has been added", async () => {
+    await request(app)
+      .post("/api/expenses")
+      .send({ name: "Coffee", amount: 5 });
+
+    const response = await request(app).get("/api/expenses");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({ name: "Coffee", amount: 5 });
+  });
+
+  it("preserves insertion order", async () => {
+    await request(app)
+      .post("/api/expenses")
+      .send({ name: "Rent", amount: 1200 });
+    await request(app)
+      .post("/api/expenses")
+      .send({ name: "Utilities", amount: 80 });
+
+    const response = await request(app).get("/api/expenses");
+
+    expect(response.body[0].name).toBe("Rent");
+    expect(response.body[1].name).toBe("Utilities");
+  });
+});
+
+describe("DELETE /api/expenses/:id", () => {
+  beforeEach(() => {
+    resetExpenseStore();
+  });
+
+  it("returns 204 and removes the expense from the list", async () => {
+    const created = await request(app)
+      .post("/api/expenses")
+      .send({ name: "Coffee", amount: 5 });
+
+    const deleteResponse = await request(app).delete(
+      `/api/expenses/${created.body.id}`,
+    );
+
+    expect(deleteResponse.status).toBe(204);
+
+    const list = await request(app).get("/api/expenses");
+    expect(list.body).toHaveLength(0);
+  });
+
+  it("returns 404 for a non-existent id", async () => {
+    const response = await request(app).delete("/api/expenses/non-existent-id");
+
+    expect(response.status).toBe(404);
+    expect(response.headers["content-type"]).toMatch(/application\/json/);
+  });
+});

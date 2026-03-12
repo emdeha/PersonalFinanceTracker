@@ -106,3 +106,47 @@ Feature: Expenses API
       """
     Then the response status should be 422
     And the response JSON should contain a validation error for "amount"
+
+  # ---------------------------------------------------------------------------
+  # GET /api/expenses — List expenses
+  # ---------------------------------------------------------------------------
+
+  Scenario: Listing expenses when the store is empty
+    Given the expense store is empty
+    When I GET "/api/expenses"
+    Then the response status should be 200
+    And the response Content-Type should be "application/json"
+    And the response JSON should be an empty array
+
+  Scenario: Listing expenses after one has been created
+    Given the expense store is empty
+    And I have created an expense with name "Coffee" and amount 5
+    When I GET "/api/expenses"
+    Then the response status should be 200
+    And the response JSON should contain 1 expense
+    And the first expense should have name "Coffee" and amount 5
+
+  Scenario: Listing expenses preserves insertion order
+    Given the expense store is empty
+    And I have created an expense with name "Rent" and amount 1200
+    And I have created an expense with name "Utilities" and amount 80
+    When I GET "/api/expenses"
+    Then the response JSON should contain 2 expenses
+    And the first expense should have name "Rent"
+    And the second expense should have name "Utilities"
+
+  # ---------------------------------------------------------------------------
+  # DELETE /api/expenses/:id — Remove an expense
+  # ---------------------------------------------------------------------------
+
+  Scenario: Removing an existing expense
+    Given I have created an expense with name "Coffee" and amount 5
+    When I DELETE "/api/expenses/{id}" using the id from the created expense
+    Then the response status should be 204
+    And the expense no longer appears when listing expenses
+
+  Scenario: Removing a non-existent expense
+    Given the expense store is empty
+    When I DELETE "/api/expenses/non-existent-id"
+    Then the response status should be 404
+    And the response Content-Type should be "application/json"
