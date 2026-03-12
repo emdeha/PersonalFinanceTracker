@@ -1,15 +1,15 @@
 // @vitest-environment node
 import request from "supertest";
-import { describe, it, expect, beforeEach } from "vitest";
-import { app, resetExpenseStore } from "./app.ts";
+import { describe, it, expect } from "vitest";
+import Database from "better-sqlite3";
+import { createApp } from "./app.ts";
+
+const createTestApp = () => createApp(new Database(":memory:"));
 
 describe("POST /api/expenses", () => {
-  beforeEach(() => {
-    resetExpenseStore();
-  });
-
   describe("creating a valid expense", () => {
     it("returns 201 with the created expense as JSON", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: 50 });
@@ -20,6 +20,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("includes a generated id in the response", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: 50 });
@@ -29,6 +30,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("assigns a different id to each expense", async () => {
+      const app = createTestApp();
       const first = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: 50 });
@@ -41,6 +43,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("trims whitespace from the name", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "  Groceries  ", amount: 50 });
@@ -52,6 +55,7 @@ describe("POST /api/expenses", () => {
 
   describe("validation errors", () => {
     it("returns 422 with a name error when name is missing", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ amount: 50 });
@@ -63,6 +67,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with a name error when name is empty", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "", amount: 50 });
@@ -74,6 +79,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with a name error when name is whitespace only", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "   ", amount: 50 });
@@ -85,6 +91,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with an amount error when amount is missing", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries" });
@@ -96,6 +103,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with an amount error when amount is zero", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: 0 });
@@ -107,6 +115,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with an amount error when amount is negative", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: -10 });
@@ -118,6 +127,7 @@ describe("POST /api/expenses", () => {
     });
 
     it("returns 422 with an amount error when amount is non-numeric", async () => {
+      const app = createTestApp();
       const response = await request(app)
         .post("/api/expenses")
         .send({ name: "Groceries", amount: "abc" });
@@ -131,11 +141,8 @@ describe("POST /api/expenses", () => {
 });
 
 describe("GET /api/expenses", () => {
-  beforeEach(() => {
-    resetExpenseStore();
-  });
-
   it("returns 200 with an empty array when the store is empty", async () => {
+    const app = createTestApp();
     const response = await request(app).get("/api/expenses");
 
     expect(response.status).toBe(200);
@@ -144,6 +151,7 @@ describe("GET /api/expenses", () => {
   });
 
   it("returns the created expense after one has been added", async () => {
+    const app = createTestApp();
     await request(app)
       .post("/api/expenses")
       .send({ name: "Coffee", amount: 5 });
@@ -156,6 +164,7 @@ describe("GET /api/expenses", () => {
   });
 
   it("preserves insertion order", async () => {
+    const app = createTestApp();
     await request(app)
       .post("/api/expenses")
       .send({ name: "Rent", amount: 1200 });
@@ -171,11 +180,8 @@ describe("GET /api/expenses", () => {
 });
 
 describe("DELETE /api/expenses/:id", () => {
-  beforeEach(() => {
-    resetExpenseStore();
-  });
-
   it("returns 204 and removes the expense from the list", async () => {
+    const app = createTestApp();
     const created = await request(app)
       .post("/api/expenses")
       .send({ name: "Coffee", amount: 5 });
@@ -191,6 +197,7 @@ describe("DELETE /api/expenses/:id", () => {
   });
 
   it("returns 404 for a non-existent id", async () => {
+    const app = createTestApp();
     const response = await request(app).delete("/api/expenses/non-existent-id");
 
     expect(response.status).toBe(404);

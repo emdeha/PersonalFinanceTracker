@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import Database from "better-sqlite3";
 
 type Expense = {
   readonly id: string;
@@ -20,12 +21,6 @@ type ValidatedExpenseInput = {
 type ValidationResult =
   | { readonly valid: true; readonly data: ValidatedExpenseInput }
   | { readonly valid: false; readonly errors: ValidationError[] };
-
-let expenses: Expense[] = [];
-
-export const resetExpenseStore = (): void => {
-  expenses = [];
-};
 
 const validateCreateExpense = (
   body: Record<string, unknown>,
@@ -53,41 +48,60 @@ const validateCreateExpense = (
   return { valid: true, data: { name, amount: amount as number } };
 };
 
-export const app = express();
-app.use(cors());
-app.use(express.json());
+export const createApp = (db: Database.Database) => {
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS expenses (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      amount REAL NOT NULL
+    )`,
+  ).run();
 
-app.post("/api/expenses", (req: Request, res: Response): void => {
-  const result = validateCreateExpense(req.body as Record<string, unknown>);
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
 
-  if (!result.valid) {
-    res.status(422).json({ errors: result.errors });
-    return;
-  }
+  app.post("/api/expenses", (req: Request, res: Response): void => {
+    const result = validateCreateExpense(req.body as Record<string, unknown>);
 
-  const expense: Expense = {
-    id: crypto.randomUUID(),
-    ...result.data,
-  };
+    if (!result.valid) {
+      res.status(422).json({ errors: result.errors });
+      return;
+    }
 
-  expenses = [...expenses, expense];
+    const expense: Expense = {
+      id: crypto.randomUUID(),
+      ...result.data,
+    };
 
-  res.status(201).json(expense);
-});
+    db.prepare(
+      "INSERT INTO expenses (id, name, amount) VALUES (?, ?, ?)",
+    ).run(expense.id, expense.name, expense.amount);
 
-app.get("/api/expenses", (_req: Request, res: Response): void => {
-  res.status(200).json(expenses);
-});
+    res.status(201).json(expense);
+  });
 
-app.delete("/api/expenses/:id", (req: Request, res: Response): void => {
-  const { id } = req.params;
-  const exists = expenses.some((e) => e.id === id);
+  app.get("/api/expenses", (_req: Request, res: Response): void => {
+    const expenses = db
+      .prepare("SELECT id, name, amount FROM expenses ORDER BY rowid")
+      .all() as Expense[];
+    res.status(200).json(expenses);
+  });
 
-  if (!exists) {
-    res.status(404).json({ error: "Expense not found" });
-    return;
-  }
+  app.delete("/api/expenses/:id", (req: Request, res: Response): void => {
+    const { id } = req.params;
+    const expense = db
+      .prepare("SELECT id FROM expenses WHERE id = ?")
+      .get(id) as Pick<Expense, "id"> | undefined;
 
-  expenses = expenses.filter((e) => e.id !== id);
-  res.status(204).send();
-});
+    if (!expense) {
+      res.status(404).json({ error: "Expense not found" });
+      return;
+    }
+
+    db.prepare("DELETE FROM expenses WHERE id = ?").run(id);
+    res.status(204).send();
+  });
+
+  return app;
+};

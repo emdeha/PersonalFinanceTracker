@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 type Expense = {
@@ -30,6 +30,12 @@ function App() {
     amount: false,
   });
 
+  useEffect(() => {
+    fetch("/api/expenses")
+      .then((res) => res.json())
+      .then((data: Expense[]) => setExpenses(data));
+  }, []);
+
   const handleSubmit = () => {
     const nameError = !isValidName(name);
     const amountError = !isValidAmount(amount);
@@ -39,20 +45,24 @@ function App() {
       return;
     }
 
-    const expense: Expense = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      amount: parseFloat(amount),
-    };
-
-    setExpenses((prev) => [...prev, expense]);
-    setName("");
-    setAmount("");
-    setErrors({ name: false, amount: false });
+    fetch("/api/expenses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name.trim(), amount: parseFloat(amount) }),
+    })
+      .then((res) => res.json())
+      .then((expense: Expense) => {
+        setExpenses((prev) => [...prev, expense]);
+        setName("");
+        setAmount("");
+        setErrors({ name: false, amount: false });
+      });
   };
 
   const removeExpense = (id: string) => {
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+    fetch(`/api/expenses/${id}`, { method: "DELETE" }).then(() => {
+      setExpenses((prev) => prev.filter((e) => e.id !== id));
+    });
   };
 
   return (

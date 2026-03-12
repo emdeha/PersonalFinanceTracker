@@ -27,6 +27,30 @@ const addExpense = (options: { name: string; amount: string }) => {
 };
 
 describe("Expense Management", () => {
+  beforeEach(() => {
+    cy.intercept("GET", "/api/expenses", { statusCode: 200, body: [] });
+    cy.intercept("POST", "/api/expenses", (req) => {
+      const body = req.body as { name: string; amount: number };
+      req.reply({
+        statusCode: 201,
+        body: { id: `stub-${body.name}`, name: body.name, amount: body.amount },
+      });
+    });
+    cy.intercept("DELETE", "/api/expenses/*", { statusCode: 204 });
+  });
+
+  context("Loading from API", () => {
+    it("loads and displays existing expenses from the API on mount", () => {
+      cy.intercept("GET", "/api/expenses", {
+        statusCode: 200,
+        body: [{ id: "1", name: "Rent", amount: 1200 }],
+      });
+      mountApp();
+      cy.findByText("Rent").should("be.visible");
+      cy.findByText("£1200.00").should("be.visible");
+    });
+  });
+
   context("Empty state", () => {
     it("shows an empty expense list message when there are no expenses", () => {
       mountApp();
