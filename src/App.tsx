@@ -16,6 +16,10 @@ function App() {
       .then((data: Expense[]) => setExpenses(data));
   }, []);
 
+  if (expenses.length === 0) {
+    return <p>No expenses</p>;
+  }
+
   return (
     <ul>
       {expenses.map((expense) => (
