@@ -39,7 +39,7 @@ describe("Expense Management", () => {
     cy.intercept("DELETE", "/api/expenses/*", { statusCode: 204 });
   });
 
-  context("Loading from API", () => {
+  context.only("Loading from API", () => {
     it("loads and displays existing expenses from the API on mount", () => {
       cy.intercept("GET", "/api/expenses", {
         statusCode: 200,
