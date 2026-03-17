@@ -6,4 +6,5 @@ export type Expense = {
 
 export interface ExpenseRepository {
   getAll(): Expense[];
+  create(expense: Expense): Expense;
 }

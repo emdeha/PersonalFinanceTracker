@@ -17,4 +17,11 @@ export class SQLiteExpenseRepository implements ExpenseRepository {
       .prepare("SELECT id, name, amount FROM expenses")
       .all() as Expense[];
   }
+
+  create(expense: Expense): Expense {
+    this.db
+      .prepare("INSERT INTO expenses (id, name, amount) VALUES (?, ?, ?)")
+      .run(expense.id, expense.name, expense.amount);
+    return expense;
+  }
 }
