@@ -1,6 +1,8 @@
+import Database from "better-sqlite3";
 import { createApp } from "./app.js";
 
-const app = createApp();
+const db = new Database("expenses.db");
+const app = createApp(db);
 
 const PORT = 3001;
 app.listen(PORT, () => {
