@@ -26,3 +26,6 @@ dist-ssr
 .eslintcache
 .claude/settings*
 .devcontainer/
+
+.nwave
+expenses.db
