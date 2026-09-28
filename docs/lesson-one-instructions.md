@@ -4,4 +4,5 @@
 2. Instruct Claude to write Cypress tests based on the Gherkin spec
    1. Make sure that these tests fail
    2. Make sure that there are no linter/type errors
-3. Instruct Claude to make the tests pass by implementing the relevant logic
+3. Go through the Gherkin scenarios one by one and implement them
+    1. Try to do as small steps as possible
