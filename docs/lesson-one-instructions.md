@@ -1,4 +1,4 @@
-# Breakout Rooms Instructions
+# Instructions
 
 1. Instruct Claude to write Gherkin spec
 2. Instruct Claude to write Cypress tests based on the Gherkin spec
