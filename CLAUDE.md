@@ -15,3 +15,10 @@
 - Derive one test per scenario in `features/*.feature`; a Scenario Outline becomes one test per Examples row.
 - Locate elements by label, role and visible text (`getByLabel`, `getByRole`, `getByText`), never by CSS class or test id. The form must expose the labels "Name" and "Amount", an "Add" button, expense rows as `listitem`, and validation errors as visible text.
 - Install the browser once with `npx playwright install chromium`. If `~/.npm` has permission errors, pass `--cache "$TMPDIR/npm-cache"` to npm.
+
+## One test at a time
+
+- Work on a single acceptance test per step. Mark every other test in the file `test.skip` so the pipeline stays fast.
+- Write the minimum production code for the chosen test, and no more. Only that test may pass. Any other test that passes by accident means the implementation is doing too much, so remove the code that makes it pass.
+- Check this by temporarily running a copy of the file with `test.skip(` replaced by `test(`, then delete the copy. Only the chosen test should pass.
+- If a test can't be made to fail without contradicting the chosen one (e.g. "keeps entered values" vs "clears the fields"), note it and leave it skipped. Don't add contrived code to force it red.
