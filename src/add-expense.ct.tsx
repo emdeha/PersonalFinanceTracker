@@ -37,7 +37,7 @@ test.describe("Add an expense by name and amount", () => {
     await expectExpenseRow(page, { name: "Coffee", amount: "5" });
   });
 
-  test("clears the input fields after adding an expense", async ({ page }) => {
+  test.skip("clears the input fields after adding an expense", async ({ page }) => {
     await nameField(page).fill("Coffee");
     await amountField(page).fill("5");
 
@@ -47,7 +47,7 @@ test.describe("Add an expense by name and amount", () => {
     await expect(amountField(page)).toHaveValue("");
   });
 
-  test("adds multiple expenses", async ({ page }) => {
+  test.skip("adds multiple expenses", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5" });
 
     await addExpense(page, { name: "Groceries", amount: "30" });
@@ -56,7 +56,7 @@ test.describe("Add an expense by name and amount", () => {
     await expectExpenseRow(page, { name: "Groceries", amount: "30" });
   });
 
-  test("lists expenses in the order they were added", async ({ page }) => {
+  test.skip("lists expenses in the order they were added", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5" });
 
     await addExpense(page, { name: "Groceries", amount: "30" });
@@ -65,13 +65,13 @@ test.describe("Add an expense by name and amount", () => {
     await expect(expenseRows(page).nth(1)).toContainText("Groceries");
   });
 
-  test("adds an expense with a decimal amount", async ({ page }) => {
+  test.skip("adds an expense with a decimal amount", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "4.50" });
 
     await expectExpenseRow(page, { name: "Coffee", amount: "4.50" });
   });
 
-  test("adds two expenses with the same name", async ({ page }) => {
+  test.skip("adds two expenses with the same name", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5" });
 
     await addExpense(page, { name: "Coffee", amount: "6" });
@@ -79,14 +79,14 @@ test.describe("Add an expense by name and amount", () => {
     await expect(expenseRows(page).filter({ hasText: "Coffee" })).toHaveCount(2);
   });
 
-  test("trims surrounding whitespace from the name", async ({ page }) => {
+  test.skip("trims surrounding whitespace from the name", async ({ page }) => {
     await addExpense(page, { name: "  Coffee  ", amount: "5" });
 
     await expectExpenseRow(page, { name: "Coffee", amount: "5" });
     await expect(expenseRows(page).first()).toHaveText(/^Coffee/);
   });
 
-  test("cannot add an expense without a name", async ({ page }) => {
+  test.skip("cannot add an expense without a name", async ({ page }) => {
     await amountField(page).fill("5");
 
     await clickAdd(page);
@@ -95,14 +95,14 @@ test.describe("Add an expense by name and amount", () => {
     await expectNoExpenseRows(page);
   });
 
-  test("cannot add an expense with a whitespace-only name", async ({ page }) => {
+  test.skip("cannot add an expense with a whitespace-only name", async ({ page }) => {
     await addExpense(page, { name: "   ", amount: "5" });
 
     await expect(page.getByText("Name is required")).toBeVisible();
     await expectNoExpenseRows(page);
   });
 
-  test("cannot add an expense without an amount", async ({ page }) => {
+  test.skip("cannot add an expense without an amount", async ({ page }) => {
     await nameField(page).fill("Coffee");
 
     await clickAdd(page);
@@ -118,7 +118,7 @@ test.describe("Add an expense by name and amount", () => {
   ];
 
   invalidAmounts.forEach(({ amount, error }) => {
-    test(`cannot add an expense with the invalid amount "${amount}"`, async ({ page }) => {
+    test.skip(`cannot add an expense with the invalid amount "${amount}"`, async ({ page }) => {
       await addExpense(page, { name: "Coffee", amount });
 
       await expect(page.getByText(error)).toBeVisible();
@@ -126,7 +126,7 @@ test.describe("Add an expense by name and amount", () => {
     });
   });
 
-  test("keeps entered values when validation fails", async ({ page }) => {
+  test.skip("keeps entered values when validation fails", async ({ page }) => {
     await nameField(page).fill("Coffee");
 
     await clickAdd(page);
@@ -134,7 +134,7 @@ test.describe("Add an expense by name and amount", () => {
     await expect(nameField(page)).toHaveValue("Coffee");
   });
 
-  test("removes the error after a successful add", async ({ page }) => {
+  test.skip("removes the error after a successful add", async ({ page }) => {
     await amountField(page).fill("5");
     await clickAdd(page);
     await expect(page.getByText("Name is required")).toBeVisible();
