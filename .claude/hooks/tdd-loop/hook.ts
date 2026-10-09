@@ -64,6 +64,8 @@ const loadState = (): StepState | undefined =>
 
 const saveState = (state: StepState): void => writeFileSync(stateFile, JSON.stringify(state));
 
+const clearState = (): void => rmSync(stateFile, { force: true });
+
 const componentTestFiles = (): ReadonlyArray<string> =>
   readdirSync(join(PROJECT_DIR, "src"), { recursive: true, encoding: "utf8" })
     .filter((path) => COMPONENT_TEST_PATTERN.test(path))
@@ -151,9 +153,11 @@ const revertStep = (state: StepState): ReadonlyArray<string> => {
     startContents: state.startContents,
     tracked: trackedAmong(changed),
   }).forEach(applyRevertAction);
-  rmSync(stateFile, { force: true });
+  clearState();
   return changed;
 };
+
+const isAbandoned = (state: LockedState): boolean => changedInWorkingTree(state.tree).length === 0;
 
 const isReport = (value: unknown): value is PlaywrightReport =>
   typeof value === "object" &&
@@ -328,6 +332,11 @@ const choosingViolation = (state: ChoosingState): string | undefined => {
 };
 
 const verifyLocked = (state: LockedState): never => {
+  if (isAbandoned(state)) {
+    clearState();
+    return emit({});
+  }
+
   const violation = lockedViolation(state);
   return violation ? block(violation) : emit({});
 };
@@ -346,6 +355,11 @@ const unfinishedStep = (state: StepState): Unfinished | undefined => {
   if (state.phase === "choosing") {
     const leftover = choosingViolation(state);
     return leftover ? hardFailure(leftover) : undefined;
+  }
+
+  if (isAbandoned(state)) {
+    clearState();
+    return undefined;
   }
 
   const violation = lockedViolation(state);
