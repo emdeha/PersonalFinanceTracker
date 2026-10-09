@@ -10,13 +10,31 @@ function App() {
 function Home() {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
+  const [error, setError] = useState('')
   const [expenses, setExpenses] = useState<readonly Expense[]>([])
 
   const addExpense = (event: FormEvent) => {
     event.preventDefault()
-    setExpenses((current) => [...current, { name, amount }])
+    if (name.trim() === '') {
+      setError('Name is required')
+      return
+    }
+    if (amount === '') {
+      setError('Amount is required')
+      return
+    }
+    if (Number.isNaN(Number(amount))) {
+      setError('Amount must be a number')
+      return
+    }
+    if (Number(amount) <= 0) {
+      setError('Amount must be greater than 0')
+      return
+    }
+    setExpenses((current) => [...current, { name: name.trim(), amount }])
     setName('')
     setAmount('')
+    setError('')
   }
 
   return (
@@ -33,6 +51,7 @@ function Home() {
         </label>
         <button type="submit">Add</button>
       </form>
+      {error && <p>{error}</p>}
       <ul>
         {expenses.map((expense, index) => (
           <li key={index}>
