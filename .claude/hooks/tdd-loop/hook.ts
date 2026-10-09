@@ -242,18 +242,37 @@ const verifyChoosing = (state: ChoosingState): never => {
   return inform(`Red verified: "${red.title}" fails. You may now implement the minimum code to make it pass.`);
 };
 
-const verifyLocked = (state: LockedState): never => {
+const lockedViolation = (state: LockedState): string | undefined => {
   const implementationOnly = verifyOnlyImplementationChanged({
     changed: changedInWorkingTree(state.tree),
   });
   if (!implementationOnly.ok) {
-    return block(implementationOnly.reason);
+    return implementationOnly.reason;
   }
 
   const changed = changedFiles(state.locked);
   return changed.length === 0
-    ? emit({})
-    : block(`The chosen test is locked in its red state, but ${changed.join(", ")} changed. Revert it.`);
+    ? undefined
+    : `The chosen test is locked, but ${changed.join(", ")} changed. Revert it.`;
+};
+
+const choosingViolation = (state: ChoosingState): string | undefined => {
+  const premature = verifyNoImplementationBeforeRed({
+    changed: changedInWorkingTree(state.tree),
+  });
+  if (!premature.ok) {
+    return premature.reason;
+  }
+
+  const changed = changedFiles(state.baselines);
+  return changed.length === 0
+    ? undefined
+    : `${changed.join(", ")} changed but no test was verified red. Revert it, or unskip exactly one test and watch it fail.`;
+};
+
+const verifyLocked = (state: LockedState): never => {
+  const violation = lockedViolation(state);
+  return violation ? block(violation) : emit({});
 };
 
 const afterTool = (): never => {
@@ -266,14 +285,24 @@ const afterTool = (): never => {
 
 const beforeStop = (): never => {
   const state = loadState();
-  if (!state || state.phase !== "red") {
+  if (!state) {
     return emit({});
   }
 
   const failStop = (reason: string): never =>
     input.stop_hook_active
-      ? emit({ systemMessage: `Stopped while "${state.title}" is still red: ${reason}` })
+      ? emit({ systemMessage: `Stopped with the red-green step incomplete: ${reason}` })
       : block(reason);
+
+  if (state.phase === "choosing") {
+    const leftover = choosingViolation(state);
+    return leftover ? failStop(leftover) : emit({});
+  }
+
+  const violation = lockedViolation(state);
+  if (violation) {
+    return failStop(violation);
+  }
 
   const [path] = Object.keys(state.locked);
   const report = path === undefined ? undefined : runTestFile(path);
