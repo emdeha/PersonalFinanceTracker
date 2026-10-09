@@ -111,6 +111,44 @@ export const collectSpecs = (report: PlaywrightReport): ReadonlyArray<Playwright
 const hasStatus = ({ spec, status }: { spec: PlaywrightSpec; status: string }): boolean =>
   spec.tests.some((test) => test.status === status);
 
+export type RevertAction =
+  | { readonly path: string; readonly action: "checkout" }
+  | { readonly path: string; readonly action: "delete" }
+  | { readonly path: string; readonly action: "write"; readonly content: string };
+
+const revertActionFor = ({
+  path,
+  startContents,
+  tracked,
+}: {
+  path: string;
+  startContents: Readonly<Record<string, string | null>>;
+  tracked: ReadonlyArray<string>;
+}): RevertAction => {
+  const content = startContents[path];
+
+  if (content === null) {
+    return { path, action: "delete" };
+  }
+
+  if (content !== undefined) {
+    return { path, action: "write", content };
+  }
+
+  return tracked.includes(path) ? { path, action: "checkout" } : { path, action: "delete" };
+};
+
+export const planRevert = ({
+  changed,
+  startContents,
+  tracked,
+}: {
+  changed: ReadonlyArray<string>;
+  startContents: Readonly<Record<string, string | null>>;
+  tracked: ReadonlyArray<string>;
+}): ReadonlyArray<RevertAction> =>
+  changed.map((path) => revertActionFor({ path, startContents, tracked }));
+
 const TEST_CALL = /\btest(\.skip)?\(/;
 
 export const classifyTestLines = (

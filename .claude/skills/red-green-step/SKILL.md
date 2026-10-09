@@ -30,8 +30,8 @@ One acceptance test per step. Only the test chosen for this step may newly pass.
 - Run `npm run test:ct -- src/tmp-all.ct.tsx`, then delete the copy.
 - Passing tests must be exactly the earlier finished ones plus the chosen one.
 - If any other test passes by accident, the implementation does too much. Remove the code that makes it pass, then repeat this step.
-- If another test can't be kept red without contradicting the chosen one (for example, "lists expenses in the order they were added" necessarily passes once "adds multiple expenses" passes), do not add contrived code to force it red and do not edit any test. Stop and report the coupled tests by name as an open point. A separate step reworks the tests, or deletes one that adds no new insight.
-- In an agent run, the `Stop` hook enforces this check. If it blocks you for a coupled test, report it instead of working around it.
+- If another test can't be kept red without contradicting the chosen one (for example, "lists expenses in the order they were added" necessarily passes once "adds multiple expenses" passes), do not add contrived code to force it red and do not edit any test. Revert your changes for the step (the unskip and the implementation), then report the chosen test and the coupled tests by name, starting the report with "STEP INCOMPLETE". A human resolves it: reworks the tests, or deletes one that adds no new insight.
+- In an agent run, the hooks enforce this check when you hand back or stop, and they revert the step for you. Report the coupling instead of working around it.
 
 ## 5. Quality gates
 

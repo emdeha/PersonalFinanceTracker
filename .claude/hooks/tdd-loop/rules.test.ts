@@ -6,6 +6,7 @@ import {
   judgeFullSuite,
   judgeGreenTest,
   judgeRedTest,
+  planRevert,
   verifyNoImplementationBeforeRed,
   verifyOnlyImplementationChanged,
   verifySingleUnskip,
@@ -318,6 +319,68 @@ describe("judging the full suite after the implementation", () => {
       reason: expect.stringContaining("Build failed"),
       coupledOnly: false,
     });
+  });
+});
+
+describe("planning how to revert a step", () => {
+  it("restores a tracked file that was clean when the step started from git", () => {
+    const actions = planRevert({
+      changed: ["src/App.tsx"],
+      startContents: {},
+      tracked: ["src/App.tsx"],
+    });
+
+    expect(actions).toEqual([{ path: "src/App.tsx", action: "checkout" }]);
+  });
+
+  it("restores the exact contents of a file that was already modified when the step started", () => {
+    const actions = planRevert({
+      changed: ["docs/notes.md"],
+      startContents: { "docs/notes.md": "the human's draft" },
+      tracked: ["docs/notes.md"],
+    });
+
+    expect(actions).toEqual([
+      { path: "docs/notes.md", action: "write", content: "the human's draft" },
+    ]);
+  });
+
+  it("deletes a new untracked file the step created", () => {
+    const actions = planRevert({
+      changed: ["src/new-impl.ts"],
+      startContents: {},
+      tracked: [],
+    });
+
+    expect(actions).toEqual([{ path: "src/new-impl.ts", action: "delete" }]);
+  });
+
+  it("deletes a file that did not exist when the step started, even if it is tracked now", () => {
+    const actions = planRevert({
+      changed: ["src/App.css"],
+      startContents: { "src/App.css": null },
+      tracked: ["src/App.css"],
+    });
+
+    expect(actions).toEqual([{ path: "src/App.css", action: "delete" }]);
+  });
+
+  it("plans every changed file independently", () => {
+    const actions = planRevert({
+      changed: ["src/App.tsx", "src/add-expense.ct.tsx", "src/tmp-all.ct.tsx"],
+      startContents: {},
+      tracked: ["src/App.tsx", "src/add-expense.ct.tsx"],
+    });
+
+    expect(actions).toEqual([
+      { path: "src/App.tsx", action: "checkout" },
+      { path: "src/add-expense.ct.tsx", action: "checkout" },
+      { path: "src/tmp-all.ct.tsx", action: "delete" },
+    ]);
+  });
+
+  it("plans nothing when nothing changed", () => {
+    expect(planRevert({ changed: [], startContents: {}, tracked: [] })).toEqual([]);
   });
 });
 

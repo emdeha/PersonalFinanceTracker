@@ -9,10 +9,12 @@ import {
   judgeFullSuite,
   judgeGreenTest,
   judgeRedTest,
+  planRevert,
   verifyNoImplementationBeforeRed,
   verifyOnlyImplementationChanged,
   verifySingleUnskip,
   type PlaywrightReport,
+  type RevertAction,
 } from "./rules.ts";
 
 type HookInput = {
@@ -28,16 +30,18 @@ type Fingerprints = Readonly<Record<string, string>>;
 
 type Unfinished = { readonly reason: string; readonly coupledOnly: boolean };
 
+type StartContents = Readonly<Record<string, string | null>>;
+
 type ChoosingState = {
   readonly phase: "choosing";
   readonly baselines: Fingerprints;
   readonly tree: Fingerprints;
-  readonly handbackDenials?: number;
+  readonly startContents: StartContents;
 };
 
 type LockedState = {
   readonly phase: "red" | "green";
-  readonly handbackDenials?: number;
+  readonly startContents: StartContents;
   readonly title: string;
   readonly line: number;
   readonly baseline: string;
@@ -108,6 +112,48 @@ const workingTree = (): Fingerprints =>
 
 const changedInWorkingTree = (before: Fingerprints): ReadonlyArray<string> =>
   differingPaths({ before, after: workingTree() });
+
+const dirtyContents = (): StartContents =>
+  Object.fromEntries(
+    dirtyPaths().map((path) => [
+      path,
+      existsSync(join(PROJECT_DIR, path)) ? readFileSync(join(PROJECT_DIR, path), "utf8") : null,
+    ]),
+  );
+
+const trackedAmong = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  paths.length === 0
+    ? []
+    : spawnSync("git", ["ls-files", "-z", "--", ...paths], {
+        cwd: PROJECT_DIR,
+        encoding: "utf8",
+      })
+        .stdout.split("\0")
+        .filter((path) => path.length > 0);
+
+const applyRevertAction = (action: RevertAction): void => {
+  const absolute = join(PROJECT_DIR, action.path);
+  if (action.action === "write") {
+    writeFileSync(absolute, action.content);
+    return;
+  }
+  if (action.action === "delete") {
+    rmSync(absolute, { force: true });
+    return;
+  }
+  spawnSync("git", ["checkout", "HEAD", "--", action.path], { cwd: PROJECT_DIR });
+};
+
+const revertStep = (state: StepState): ReadonlyArray<string> => {
+  const changed = changedInWorkingTree(state.tree);
+  planRevert({
+    changed,
+    startContents: state.startContents,
+    tracked: trackedAmong(changed),
+  }).forEach(applyRevertAction);
+  rmSync(stateFile, { force: true });
+  return changed;
+};
 
 const isReport = (value: unknown): value is PlaywrightReport =>
   typeof value === "object" &&
@@ -183,6 +229,7 @@ const beforeTool = (): never => {
     phase: "choosing",
     baselines: snapshot(),
     tree: workingTree(),
+    startContents: dirtyContents(),
   };
   saveState(state);
 
@@ -247,6 +294,7 @@ const verifyChoosing = (state: ChoosingState): never => {
     baseline,
     locked: { [path]: current },
     tree: state.tree,
+    startContents: state.startContents,
   });
   return inform(`Red verified: "${red.title}" fails. You may now implement the minimum code to make it pass.`);
 };
@@ -334,11 +382,21 @@ const unfinishedStep = (state: StepState): Unfinished | undefined => {
   return undefined;
 };
 
+const describeRevert = (paths: ReadonlyArray<string>): string =>
+  paths.length === 0 ? "nothing needed reverting" : `reverted: ${paths.join(", ")}`;
+
 const beforeStop = (): never => {
   const state = loadState();
   const unfinished = state ? unfinishedStep(state) : undefined;
-  if (!unfinished) {
+  if (!state || !unfinished) {
     return emit({});
+  }
+
+  if (unfinished.coupledOnly) {
+    const reverted = revertStep(state);
+    return emit({
+      systemMessage: `Step incomplete because of coupled tests, all changes reverted (${describeRevert(reverted)}): ${unfinished.reason}`,
+    });
   }
 
   return input.stop_hook_active
@@ -346,8 +404,8 @@ const beforeStop = (): never => {
     : block(unfinished.reason);
 };
 
-const COUPLED_TESTS_GUIDANCE =
-  'If these tests pass only because a correct implementation of the chosen test necessarily makes them pass, do not edit tests or add contrived code. Call SubagentHandback again with a report that starts with "STEP INCOMPLETE" and lists them under Open points.';
+const coupledTestsInstructions = (reverted: ReadonlyArray<string>): string =>
+  `Coupled tests: ${describeRevert(reverted)}. The working tree is back to where this step started. Do not retry or work around it; a human will resolve it. Call SubagentHandback again with a report that starts with "STEP INCOMPLETE", names the chosen test, lists the coupled tests that passed, and says all changes were reverted.`;
 
 const beforeHandback = (): never => {
   const state = loadState();
@@ -356,18 +414,9 @@ const beforeHandback = (): never => {
     return emit({});
   }
 
-  const current = loadState() ?? state;
-  const denials = current.handbackDenials ?? 0;
-  if (unfinished.coupledOnly && denials > 0) {
-    return emit({ systemMessage: `Handed back with the red-green step incomplete: ${unfinished.reason}` });
-  }
-
-  saveState({ ...current, handbackDenials: denials + 1 });
-  return deny(
-    unfinished.coupledOnly
-      ? `${unfinished.reason} ${COUPLED_TESTS_GUIDANCE}`
-      : `${unfinished.reason} Fix this before handing back.`,
-  );
+  return unfinished.coupledOnly
+    ? deny(`${unfinished.reason} ${coupledTestsInstructions(revertStep(state))}`)
+    : deny(`${unfinished.reason} Fix this before handing back.`);
 };
 
 const isStopEvent = (): boolean => ["Stop", "SubagentStop"].includes(input.hook_event_name);
