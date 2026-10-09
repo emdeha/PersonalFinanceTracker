@@ -18,4 +18,4 @@
 
 ## TDD steps
 
-- Implement acceptance tests one at a time with the `red-green-step` skill. Only the test chosen for the step may newly pass; all others stay `test.skip`.
+- Implement acceptance tests one at a time with the `red-green-step` skill, or delegate a step to the `red-green-implementer` agent to keep the main context small. Only the test chosen for the step may newly pass; all others stay `test.skip`.
