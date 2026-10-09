@@ -1,8 +1,16 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import { judgeRedTest, verifySingleUnskip, type PlaywrightReport } from "./rules.ts";
+import {
+  SCRATCH_TEST_FILE,
+  judgeRedTest,
+  verifyNoImplementationBeforeRed,
+  verifyOnlyImplementationChanged,
+  verifySingleUnskip,
+  type PlaywrightReport,
+} from "./rules.ts";
 
 type HookInput = {
   readonly hook_event_name: string;
@@ -12,12 +20,19 @@ type HookInput = {
   readonly tool_input: { readonly file_path?: string; readonly command?: string };
 };
 
+type Fingerprints = Readonly<Record<string, string>>;
+
 type StepState =
-  | { readonly phase: "choosing"; readonly baselines: Readonly<Record<string, string>> }
+  | {
+      readonly phase: "choosing";
+      readonly baselines: Fingerprints;
+      readonly tree: Fingerprints;
+    }
   | {
       readonly phase: "red";
       readonly title: string;
-      readonly locked: Readonly<Record<string, string>>;
+      readonly locked: Fingerprints;
+      readonly tree: Fingerprints;
     };
 
 const PROJECT_DIR = resolve(process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
@@ -35,19 +50,51 @@ const saveState = (state: StepState): void => writeFileSync(stateFile, JSON.stri
 const componentTestFiles = (): ReadonlyArray<string> =>
   readdirSync(join(PROJECT_DIR, "src"), { recursive: true, encoding: "utf8" })
     .filter((path) => COMPONENT_TEST_PATTERN.test(path))
-    .map((path) => join("src", path));
+    .map((path) => join("src", path))
+    .filter((path) => path !== SCRATCH_TEST_FILE);
 
 const snapshot = (): Readonly<Record<string, string>> =>
   Object.fromEntries(
     componentTestFiles().map((path) => [path, readFileSync(join(PROJECT_DIR, path), "utf8")]),
   );
 
-const changedFiles = (before: Readonly<Record<string, string>>): ReadonlyArray<string> => {
-  const after = snapshot();
-  return [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
+const differingPaths = ({
+  before,
+  after,
+}: {
+  before: Fingerprints;
+  after: Fingerprints;
+}): ReadonlyArray<string> =>
+  [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
     (path) => before[path] !== after[path],
   );
+
+const changedFiles = (before: Fingerprints): ReadonlyArray<string> =>
+  differingPaths({ before, after: snapshot() });
+
+const fingerprint = (path: string): string => {
+  const absolute = join(PROJECT_DIR, path);
+  return existsSync(absolute)
+    ? createHash("sha1").update(readFileSync(absolute)).digest("hex")
+    : "deleted";
 };
+
+const dirtyPaths = (): ReadonlyArray<string> => {
+  const status = spawnSync("git", ["status", "--porcelain", "-z", "--untracked-files=all"], {
+    cwd: PROJECT_DIR,
+    encoding: "utf8",
+  }).stdout;
+  return status
+    .split("\0")
+    .filter((entry) => entry.length > 3)
+    .map((entry) => entry.slice(3));
+};
+
+const workingTree = (): Fingerprints =>
+  Object.fromEntries(dirtyPaths().map((path) => [path, fingerprint(path)]));
+
+const changedInWorkingTree = (before: Fingerprints): ReadonlyArray<string> =>
+  differingPaths({ before, after: workingTree() });
 
 const isReport = (value: unknown): value is PlaywrightReport =>
   typeof value === "object" &&
@@ -104,7 +151,11 @@ const isTestEdit = (): boolean =>
   COMPONENT_TEST_PATTERN.test(input.tool_input.file_path ?? "");
 
 const beforeTool = (): never => {
-  const state: StepState = loadState() ?? { phase: "choosing", baselines: snapshot() };
+  const state: StepState = loadState() ?? {
+    phase: "choosing",
+    baselines: snapshot(),
+    tree: workingTree(),
+  };
   saveState(state);
 
   if (state.phase === "choosing" && isProductionEdit()) {
@@ -117,10 +168,23 @@ const beforeTool = (): never => {
     return deny("The chosen test is locked in its red state. Implement the code, not the test.");
   }
 
+  if (state.phase === "red" && isProductionEdit()) {
+    const edited = relative(PROJECT_DIR, resolve(PROJECT_DIR, input.tool_input.file_path ?? ""));
+    const verdict = verifyOnlyImplementationChanged({ changed: [edited] });
+    return verdict.ok ? emit({}) : deny(verdict.reason);
+  }
+
   return emit({});
 };
 
 const verifyChoosing = (state: Extract<StepState, { phase: "choosing" }>): never => {
+  const premature = verifyNoImplementationBeforeRed({
+    changed: changedInWorkingTree(state.tree),
+  });
+  if (!premature.ok) {
+    return block(premature.reason);
+  }
+
   const changed = changedFiles(state.baselines);
   if (changed.length === 0) {
     return emit({});
@@ -148,11 +212,18 @@ const verifyChoosing = (state: Extract<StepState, { phase: "choosing" }>): never
     return block(red.reason);
   }
 
-  saveState({ phase: "red", title: red.title, locked: { [path]: current } });
+  saveState({ phase: "red", title: red.title, locked: { [path]: current }, tree: state.tree });
   return inform(`Red verified: "${red.title}" fails. You may now implement the minimum code to make it pass.`);
 };
 
 const verifyRed = (state: Extract<StepState, { phase: "red" }>): never => {
+  const implementationOnly = verifyOnlyImplementationChanged({
+    changed: changedInWorkingTree(state.tree),
+  });
+  if (!implementationOnly.ok) {
+    return block(implementationOnly.reason);
+  }
+
   const changed = changedFiles(state.locked);
   return changed.length === 0
     ? emit({})

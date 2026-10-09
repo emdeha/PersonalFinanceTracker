@@ -51,7 +51,52 @@ export const verifySingleUnskip = ({
   return { ok: true, line: lineAt({ source: current, index: matchingIndex }) };
 };
 
-const specsOf = (suite: PlaywrightSuite): ReadonlyArray<PlaywrightSpec> => [
+export const SCRATCH_TEST_FILE = "src/tmp-all.ct.tsx";
+
+const COMPONENT_TEST_FILE = /\.ct\.tsx$/;
+const IMPLEMENTATION_FILE = /^src\/.+\.(ts|tsx|css)$/;
+const VITEST_FILE = /\.(test|spec)\./;
+
+const isComponentTestFile = (path: string): boolean => COMPONENT_TEST_FILE.test(path);
+
+export const isImplementationFile = (path: string): boolean =>
+  IMPLEMENTATION_FILE.test(path) && !isComponentTestFile(path) && !VITEST_FILE.test(path);
+
+const listFiles = (paths: ReadonlyArray<string>): string => paths.join(", ");
+
+export const verifyOnlyImplementationChanged = ({
+  changed,
+}: {
+  changed: ReadonlyArray<string>;
+}): Verdict<object> => {
+  const offenders = changed.filter(
+    (path) => !isComponentTestFile(path) && !isImplementationFile(path),
+  );
+
+  return offenders.length === 0
+    ? { ok: true }
+    : {
+        ok: false,
+        reason: `Only implementation source (src/**/*.ts, tsx, css; not tests) may change in this step. Revert: ${listFiles(offenders)}.`,
+      };
+};
+
+export const verifyNoImplementationBeforeRed = ({
+  changed,
+}: {
+  changed: ReadonlyArray<string>;
+}): Verdict<object> => {
+  const offenders = changed.filter((path) => !isComponentTestFile(path));
+
+  return offenders.length === 0
+    ? { ok: true }
+    : {
+        ok: false,
+        reason: `${listFiles(offenders)} changed before the chosen test was verified red. Revert it, then unskip one test and watch it fail first.`,
+      };
+};
+
+const specsOf =(suite: PlaywrightSuite): ReadonlyArray<PlaywrightSpec> => [
   ...(suite.specs ?? []),
   ...(suite.suites ?? []).flatMap(specsOf),
 ];

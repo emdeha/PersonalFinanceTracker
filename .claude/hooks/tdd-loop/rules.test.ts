@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   collectSpecs,
+  isImplementationFile,
   judgeRedTest,
+  verifyNoImplementationBeforeRed,
+  verifyOnlyImplementationChanged,
   verifySingleUnskip,
   type PlaywrightReport,
 } from "./rules.ts";
@@ -128,5 +131,82 @@ describe("judging that the unskipped test is red", () => {
     const result = judgeRedTest({ report: getMockReport({ suites: [] }), line: 2 });
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("recognising implementation files", () => {
+  it.each(["src/App.tsx", "src/components/expense-list.tsx", "src/lib/money.ts", "src/App.css"])(
+    "treats %s as implementation",
+    (path) => {
+      expect(isImplementationFile(path)).toBe(true);
+    },
+  );
+
+  it.each([
+    "src/add-expense.ct.tsx",
+    "src/App.test.tsx",
+    "src/money.spec.ts",
+    "features/add-expense.feature",
+    "docs/lesson-one-instructions.md",
+    "package.json",
+    "playwright-ct.config.ts",
+    "CLAUDE.md",
+    ".claude/agents/red-green-implementer.md",
+    "vitest.setup.ts",
+    "src/tmp-all.ct.tsx",
+  ])("does not treat %s as implementation", (path) => {
+    expect(isImplementationFile(path)).toBe(false);
+  });
+});
+
+describe("verifying that only implementation changed after red", () => {
+  it("accepts changes to implementation files", () => {
+    expect(verifyOnlyImplementationChanged({ changed: ["src/App.tsx", "src/App.css"] })).toEqual({
+      ok: true,
+    });
+  });
+
+  it("accepts no changes yet", () => {
+    expect(verifyOnlyImplementationChanged({ changed: [] })).toEqual({ ok: true });
+  });
+
+  it("ignores the component test files and the scratch copy, which are checked separately", () => {
+    const changed = ["src/App.tsx", "src/add-expense.ct.tsx", "src/tmp-all.ct.tsx"];
+
+    expect(verifyOnlyImplementationChanged({ changed })).toEqual({ ok: true });
+  });
+
+  it("rejects changes to anything else and names the files", () => {
+    const result = verifyOnlyImplementationChanged({
+      changed: ["src/App.tsx", "package.json", "docs/notes.md"],
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: expect.stringMatching(/package\.json.*docs\/notes\.md/),
+    });
+  });
+
+  it("rejects an edit to a Vitest test", () => {
+    const result = verifyOnlyImplementationChanged({ changed: ["src/App.test.tsx"] });
+
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("verifying that nothing but the chosen test changed before red", () => {
+  it("accepts changes to component test files and the scratch copy only", () => {
+    const changed = ["src/add-expense.ct.tsx", "src/tmp-all.ct.tsx"];
+
+    expect(verifyNoImplementationBeforeRed({ changed })).toEqual({ ok: true });
+  });
+
+  it("rejects any other file and says red comes first", () => {
+    const result = verifyNoImplementationBeforeRed({ changed: ["src/App.tsx"] });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: expect.stringContaining("before the chosen test was verified red"),
+    });
   });
 });
