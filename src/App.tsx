@@ -36,7 +36,7 @@ function Home() {
       <ul>
         {expense && (
           <li>
-            {expense.name} {Number(expense.amount)}
+            {expense.name} {expense.amount}
           </li>
         )}
       </ul>

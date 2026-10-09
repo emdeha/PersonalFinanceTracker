@@ -65,7 +65,7 @@ test.describe("Add an expense by name and amount", () => {
     await expect(expenseRows(page).nth(1)).toContainText("Groceries");
   });
 
-  test.skip("adds an expense with a decimal amount", async ({ page }) => {
+  test("adds an expense with a decimal amount", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "4.50" });
 
     await expectExpenseRow(page, { name: "Coffee", amount: "4.50" });
