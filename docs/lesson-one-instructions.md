@@ -14,6 +14,7 @@
     2. After you see the test pass, ask it to verify if others pass as well
     3. Encode that in CLAUDE.md as well
     4. After each step, review code
+    5. Encode that in a loop
 5. After the first pass, encode this flow in CLAUDE.md - use https://claude.ai/share/50aa04d6-2bcd-4326-bcca-e9a2865f4cdd as an example how to extract relevant info to build a skill
 6. Continue until all is implemented and observe how well does Claude keep the flow. Add modifications to CLAUDE.md
 7. Next step - add category. But before you start it out - encode the BDD workflow into a skill and start using it (steps 1 to 4)
