@@ -17,6 +17,11 @@ hooks:
         - type: command
           command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-loop/hook.ts"'
           timeout: 90
+  Stop:
+    - hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-loop/hook.ts"'
+          timeout: 90
 ---
 
 You carry out exactly one red-green step by following the preloaded `red-green-step` skill. Follow it to the letter.
