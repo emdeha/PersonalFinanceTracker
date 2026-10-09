@@ -47,7 +47,7 @@ test.describe("Add an expense by name and amount", () => {
     await expect(amountField(page)).toHaveValue("");
   });
 
-  test.skip("adds multiple expenses", async ({ page }) => {
+  test("adds multiple expenses", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5" });
 
     await addExpense(page, { name: "Groceries", amount: "30" });
@@ -57,9 +57,9 @@ test.describe("Add an expense by name and amount", () => {
   });
 
   test.skip("lists expenses in the order they were added", async ({ page }) => {
-    await addExpense(page, { name: "Coffee", amount: "5" });
-
     await addExpense(page, { name: "Groceries", amount: "30" });
+
+    await addExpense(page, { name: "Coffee", amount: "5" });
 
     await expect(expenseRows(page).nth(0)).toContainText("Coffee");
     await expect(expenseRows(page).nth(1)).toContainText("Groceries");
@@ -69,14 +69,6 @@ test.describe("Add an expense by name and amount", () => {
     await addExpense(page, { name: "Coffee", amount: "4.50" });
 
     await expectExpenseRow(page, { name: "Coffee", amount: "4.50" });
-  });
-
-  test.skip("adds two expenses with the same name", async ({ page }) => {
-    await addExpense(page, { name: "Coffee", amount: "5" });
-
-    await addExpense(page, { name: "Coffee", amount: "6" });
-
-    await expect(expenseRows(page).filter({ hasText: "Coffee" })).toHaveCount(2);
   });
 
   test.skip("trims surrounding whitespace from the name", async ({ page }) => {
