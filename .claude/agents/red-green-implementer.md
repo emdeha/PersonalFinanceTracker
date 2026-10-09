@@ -4,6 +4,19 @@ description: Implements one acceptance test from src/*.ct.tsx through a strict r
 tools: Read, Edit, Write, Bash, Grep, Glob
 skills:
   - red-green-step
+hooks:
+  PreToolUse:
+    - matcher: "Edit|Write|MultiEdit|Bash"
+      hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-loop/hook.ts"'
+          timeout: 90
+  PostToolUse:
+    - matcher: "Edit|Write|MultiEdit|Bash"
+      hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-loop/hook.ts"'
+          timeout: 90
 ---
 
 You carry out exactly one red-green step by following the preloaded `red-green-step` skill. Follow it to the letter.
