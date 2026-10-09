@@ -107,7 +107,66 @@ export const collectSpecs = (report: PlaywrightReport): ReadonlyArray<Playwright
 const hasStatus = ({ spec, status }: { spec: PlaywrightSpec; status: string }): boolean =>
   spec.tests.some((test) => test.status === status);
 
-export const judgeGreenTest = ({
+const TEST_CALL = /\btest(\.skip)?\(/;
+
+export const classifyTestLines = (
+  source: string,
+): { finished: ReadonlyArray<number>; pending: ReadonlyArray<number> } => {
+  const calls = source.split("\n").flatMap((text, index) => {
+    const match = text.match(TEST_CALL);
+    return match ? [{ line: index + 1, skipped: match[1] !== undefined }] : [];
+  });
+
+  return {
+    finished: calls.filter((call) => !call.skipped).map((call) => call.line),
+    pending: calls.filter((call) => call.skipped).map((call) => call.line),
+  };
+};
+
+const allPass = (spec: PlaywrightSpec): boolean =>
+  spec.tests.every((test) => test.status === "expected");
+
+export const judgeFullSuite = ({
+  report,
+  finishedLines,
+  chosenLine,
+}: {
+  report: PlaywrightReport;
+  finishedLines: ReadonlyArray<number>;
+  chosenLine: number;
+}): Verdict<object> => {
+  if (report.errors.length > 0) {
+    return {
+      ok: false,
+      reason: `The full-suite run reported errors: ${report.errors.map((error) => error.message).join("; ")}`,
+    };
+  }
+
+  const specs = collectSpecs(report);
+  const isFinished = (spec: PlaywrightSpec): boolean => finishedLines.includes(spec.line);
+
+  const problems = [
+    ...finishedLines
+      .filter((line) => !specs.some((spec) => spec.line === line))
+      .map((line) => `The finished test at line ${line} did not run.`),
+    ...specs
+      .filter((spec) => isFinished(spec) && !allPass(spec))
+      .map((spec) => `"${spec.title}" used to pass and now fails. Do not break finished tests.`),
+    ...specs
+      .filter((spec) => spec.line === chosenLine && !allPass(spec))
+      .map((spec) => `"${spec.title}" is the chosen test and does not pass.`),
+    ...specs
+      .filter((spec) => !isFinished(spec) && spec.line !== chosenLine && hasStatus({ spec, status: "expected" }))
+      .map(
+        (spec) =>
+          `"${spec.title}" passes but it was not the chosen test. Remove the code that makes it pass.`,
+      ),
+  ];
+
+  return problems.length === 0 ? { ok: true } : { ok: false, reason: problems.join(" ") };
+};
+
+export const judgeGreenTest =({
   report,
   line,
 }: {

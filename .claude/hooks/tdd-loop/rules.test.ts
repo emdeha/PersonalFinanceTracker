@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  classifyTestLines,
   collectSpecs,
   isImplementationFile,
+  judgeFullSuite,
   judgeGreenTest,
   judgeRedTest,
   verifyNoImplementationBeforeRed,
@@ -180,6 +182,132 @@ describe("judging that the chosen test is green", () => {
     const result = judgeGreenTest({ report: getMockReport({ suites: [] }), line: 2 });
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("classifying tests by their line in the baseline", () => {
+  it("separates finished tests from pending ones", () => {
+    expect(classifyTestLines(baselineSource)).toEqual({ finished: [1], pending: [2, 3] });
+  });
+
+  it("recognises indented and generated tests", () => {
+    const source = ['  test("a", () => {});', "  rows.forEach(() => {", "    test.skip(`b`, () => {});", "  });"].join(
+      "\n",
+    );
+
+    expect(classifyTestLines(source)).toEqual({ finished: [1], pending: [3] });
+  });
+
+  it("does not mistake other test helpers for tests", () => {
+    const source = ['test.describe("x", () => {', "  test.beforeEach(() => {});", '  test.skip("a", () => {});', "});"].join(
+      "\n",
+    );
+
+    expect(classifyTestLines(source)).toEqual({ finished: [], pending: [3] });
+  });
+});
+
+describe("judging the full suite after the implementation", () => {
+  const getSuiteReport = (
+    statuses: ReadonlyArray<{ line: number; title: string; status: string }>,
+    errors: PlaywrightReport["errors"] = [],
+  ): PlaywrightReport => ({
+    errors,
+    suites: [
+      {
+        title: "feature",
+        specs: statuses.map(({ line, title, status }) => ({ line, title, tests: [{ status }] })),
+      },
+    ],
+  });
+
+  const getPassingStep = () => [
+    { line: 1, title: "first", status: "expected" },
+    { line: 2, title: "second", status: "expected" },
+    { line: 3, title: "third", status: "unexpected" },
+    { line: 4, title: "fourth", status: "unexpected" },
+  ];
+
+  const judge = (report: PlaywrightReport) =>
+    judgeFullSuite({ report, finishedLines: [1], chosenLine: 2 });
+
+  it("accepts when finished and chosen tests pass and every other test fails", () => {
+    expect(judge(getSuiteReport(getPassingStep()))).toEqual({ ok: true });
+  });
+
+  it("rejects a finished test that no longer passes", () => {
+    const report = getSuiteReport(
+      getPassingStep().map((spec) => (spec.line === 1 ? { ...spec, status: "unexpected" } : spec)),
+    );
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining('"first" used to pass and now fails'),
+    });
+  });
+
+  it("rejects a test that passes without having been chosen", () => {
+    const report = getSuiteReport(
+      getPassingStep().map((spec) => (spec.line === 3 ? { ...spec, status: "expected" } : spec)),
+    );
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining('"third" passes but it was not the chosen test'),
+    });
+  });
+
+  it("reports regressions and accidental passes together", () => {
+    const report = getSuiteReport([
+      { line: 1, title: "first", status: "unexpected" },
+      { line: 2, title: "second", status: "expected" },
+      { line: 3, title: "third", status: "expected" },
+    ]);
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringMatching(/"first".*"third"/s),
+    });
+  });
+
+  it("rejects a chosen test that does not pass", () => {
+    const report = getSuiteReport(
+      getPassingStep().map((spec) => (spec.line === 2 ? { ...spec, status: "unexpected" } : spec)),
+    );
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining('"second" is the chosen test and does not pass'),
+    });
+  });
+
+  it("rejects a finished test that did not run", () => {
+    const report = getSuiteReport(getPassingStep().filter((spec) => spec.line !== 1));
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining("line 1 did not run"),
+    });
+  });
+
+  it("treats every test generated from one line the same way", () => {
+    const report = getSuiteReport([
+      { line: 1, title: "first", status: "expected" },
+      { line: 2, title: "second", status: "expected" },
+      { line: 3, title: "row a", status: "unexpected" },
+      { line: 3, title: "row b", status: "expected" },
+    ]);
+
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining('"row b" passes but it was not the chosen test'),
+    });
+  });
+
+  it("rejects a run with errors", () => {
+    const report = getSuiteReport(getPassingStep(), [{ message: "Build failed" }]);
+
+    expect(judge(report)).toEqual({ ok: false, reason: expect.stringContaining("Build failed") });
   });
 });
 
