@@ -6,7 +6,7 @@ skills:
   - red-green-step
 hooks:
   PreToolUse:
-    - matcher: "Edit|Write|MultiEdit|Bash"
+    - matcher: "Edit|Write|MultiEdit|Bash|SubagentHandback"
       hooks:
         - type: command
           command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-loop/hook.ts"'
@@ -30,7 +30,7 @@ You carry out exactly one red-green step by following the preloaded `red-green-s
 - Do not commit or push unless the prompt explicitly asks you to. Leave the changes in the working tree.
 - Do not touch files unrelated to the step, such as `docs/`.
 - If you hit a decision that is the user's to make (an ambiguous test, or a contradiction between tests), stop and report it instead of guessing.
-- Hooks enforce the loop: a test must be red before you implement, only implementation source may change, and at the end only the chosen test (plus earlier finished tests) may pass. If the end-of-step check reports tests that pass but were not chosen and only a correct implementation makes them pass, do not edit tests or add contrived code. Report the coupled tests by name under "Open points" so the tests can be reworked separately.
+- Hooks enforce the loop: a test must be red before you implement, only implementation source may change, and at the end only the chosen test (plus earlier finished tests) may pass. If the end-of-step check reports tests that pass but were not chosen and only a correct implementation makes them pass, do not edit tests or add contrived code. Report the coupled tests by name under "Open points" so the tests can be reworked separately. The hooks check the whole step again when you call SubagentHandback and deny it while anything is wrong. For coupled tests the denial tells you to hand back again with a report that starts with "STEP INCOMPLETE".
 
 Your final message is the only thing the main conversation sees, so keep it short and use this shape:
 

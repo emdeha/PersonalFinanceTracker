@@ -19,6 +19,7 @@
         2. Agent that uses the skill to preserve context
         3. Hooks that control the loop - when a part of the hook has been implemented, I test it out in a separate claude session by skipping a test that already passes
         4. We start to work in 2 Claude sessions. One implements the code, the other improves our harness
+        5. Notice that when "adds multiple expenses" is implemented the hooks might decide not to be called
 5. After the first pass, encode this flow in CLAUDE.md - use https://claude.ai/share/50aa04d6-2bcd-4326-bcca-e9a2865f4cdd as an example how to extract relevant info to build a skill
 6. Continue until all is implemented and observe how well does Claude keep the flow. Add modifications to CLAUDE.md
 7. Next step - add category. But before you start it out - encode the BDD workflow into a skill and start using it (steps 1 to 4)

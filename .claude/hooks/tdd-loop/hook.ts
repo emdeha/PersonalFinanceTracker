@@ -26,14 +26,18 @@ type HookInput = {
 
 type Fingerprints = Readonly<Record<string, string>>;
 
+type Unfinished = { readonly reason: string; readonly coupledOnly: boolean };
+
 type ChoosingState = {
   readonly phase: "choosing";
   readonly baselines: Fingerprints;
   readonly tree: Fingerprints;
+  readonly handbackDenials?: number;
 };
 
 type LockedState = {
   readonly phase: "red" | "green";
+  readonly handbackDenials?: number;
   readonly title: string;
   readonly line: number;
   readonly baseline: string;
@@ -46,6 +50,7 @@ type StepState = ChoosingState | LockedState;
 const PROJECT_DIR = resolve(process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
 const COMPONENT_TEST_PATTERN = /\.ct\.tsx$/;
 const FILE_EDIT_TOOLS = ["Edit", "Write", "MultiEdit"];
+const HANDBACK_TOOL = "SubagentHandback";
 
 const input: HookInput = JSON.parse(readFileSync(0, "utf8"));
 const stateFile = join(tmpdir(), `tdd-loop-${input.agent_id ?? input.session_id}.json`);
@@ -170,6 +175,10 @@ const isProductionEdit = (): boolean => isFileEdit() && !COMPONENT_TEST_PATTERN.
 const isTestEdit = (): boolean => isFileEdit() && COMPONENT_TEST_PATTERN.test(editedPath());
 
 const beforeTool = (): never => {
+  if (input.tool_name === HANDBACK_TOOL) {
+    return beforeHandback();
+  }
+
   const state: StepState = loadState() ?? {
     phase: "choosing",
     baselines: snapshot(),
@@ -283,41 +292,33 @@ const afterTool = (): never => {
   return state.phase === "choosing" ? verifyChoosing(state) : verifyLocked(state);
 };
 
-const beforeStop = (): never => {
-  const state = loadState();
-  if (!state) {
-    return emit({});
-  }
-
-  const failStop = (reason: string): never =>
-    input.stop_hook_active
-      ? emit({ systemMessage: `Stopped with the red-green step incomplete: ${reason}` })
-      : block(reason);
+const unfinishedStep = (state: StepState): Unfinished | undefined => {
+  const hardFailure = (reason: string): Unfinished => ({ reason, coupledOnly: false });
 
   if (state.phase === "choosing") {
     const leftover = choosingViolation(state);
-    return leftover ? failStop(leftover) : emit({});
+    return leftover ? hardFailure(leftover) : undefined;
   }
 
   const violation = lockedViolation(state);
   if (violation) {
-    return failStop(violation);
+    return hardFailure(violation);
   }
 
   const [path] = Object.keys(state.locked);
   const report = path === undefined ? undefined : runTestFile(path);
   if (!report) {
-    return failStop("The test run produced no report, so the chosen test is not verified green.");
+    return hardFailure("The test run produced no report, so the chosen test is not verified green.");
   }
 
   const green = judgeGreenTest({ report, line: state.line });
   if (!green.ok) {
-    return failStop(green.reason);
+    return hardFailure(green.reason);
   }
 
   const fullReport = path === undefined ? undefined : runWithEverythingUnskipped(path);
   if (!fullReport) {
-    return failStop("The full-suite run produced no report, so the other tests are not verified.");
+    return hardFailure("The full-suite run produced no report, so the other tests are not verified.");
   }
 
   const suite = judgeFullSuite({
@@ -326,11 +327,47 @@ const beforeStop = (): never => {
     chosenLine: state.line,
   });
   if (!suite.ok) {
-    return failStop(suite.reason);
+    return { reason: suite.reason, coupledOnly: suite.coupledOnly };
   }
 
   saveState({ ...state, phase: "green" });
-  return emit({});
+  return undefined;
+};
+
+const beforeStop = (): never => {
+  const state = loadState();
+  const unfinished = state ? unfinishedStep(state) : undefined;
+  if (!unfinished) {
+    return emit({});
+  }
+
+  return input.stop_hook_active
+    ? emit({ systemMessage: `Stopped with the red-green step incomplete: ${unfinished.reason}` })
+    : block(unfinished.reason);
+};
+
+const COUPLED_TESTS_GUIDANCE =
+  'If these tests pass only because a correct implementation of the chosen test necessarily makes them pass, do not edit tests or add contrived code. Call SubagentHandback again with a report that starts with "STEP INCOMPLETE" and lists them under Open points.';
+
+const beforeHandback = (): never => {
+  const state = loadState();
+  const unfinished = state ? unfinishedStep(state) : undefined;
+  if (!state || !unfinished) {
+    return emit({});
+  }
+
+  const current = loadState() ?? state;
+  const denials = current.handbackDenials ?? 0;
+  if (unfinished.coupledOnly && denials > 0) {
+    return emit({ systemMessage: `Handed back with the red-green step incomplete: ${unfinished.reason}` });
+  }
+
+  saveState({ ...current, handbackDenials: denials + 1 });
+  return deny(
+    unfinished.coupledOnly
+      ? `${unfinished.reason} ${COUPLED_TESTS_GUIDANCE}`
+      : `${unfinished.reason} Fix this before handing back.`,
+  );
 };
 
 const isStopEvent = (): boolean => ["Stop", "SubagentStop"].includes(input.hook_event_name);
