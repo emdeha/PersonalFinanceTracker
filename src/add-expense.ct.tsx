@@ -57,9 +57,8 @@ test.describe("Add an expense by name and amount", () => {
   });
 
   test.skip("lists expenses in the order they were added", async ({ page }) => {
-    await addExpense(page, { name: "Groceries", amount: "30" });
-
     await addExpense(page, { name: "Coffee", amount: "5" });
+    await addExpense(page, { name: "Beer", amount: "30" });
 
     await expect(expenseRows(page).nth(0)).toContainText("Coffee");
     await expect(expenseRows(page).nth(1)).toContainText("Groceries");
