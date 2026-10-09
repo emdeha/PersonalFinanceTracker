@@ -15,6 +15,8 @@ function Home() {
   const addExpense = (event: FormEvent) => {
     event.preventDefault()
     setExpense({ name, amount })
+    setName('')
+    setAmount('')
   }
 
   return (
