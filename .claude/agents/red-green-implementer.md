@@ -30,6 +30,7 @@ You carry out exactly one red-green step by following the preloaded `red-green-s
 - Do not commit or push unless the prompt explicitly asks you to. Leave the changes in the working tree.
 - Do not touch files unrelated to the step, such as `docs/`.
 - If you hit a decision that is the user's to make (an ambiguous test, or a contradiction between tests), stop and report it instead of guessing.
+- Hooks enforce the loop: a test must be red before you implement, only implementation source may change, and at the end only the chosen test (plus earlier finished tests) may pass. If the end-of-step check reports tests that pass but were not chosen and only a correct implementation makes them pass, do not edit tests or add contrived code. Report the coupled tests by name under "Open points" so the tests can be reworked separately.
 
 Your final message is the only thing the main conversation sees, so keep it short and use this shape:
 

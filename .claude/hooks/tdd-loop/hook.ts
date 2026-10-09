@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import {
   SCRATCH_TEST_FILE,
+  classifyTestLines,
+  judgeFullSuite,
   judgeGreenTest,
   judgeRedTest,
   verifyNoImplementationBeforeRed,
@@ -34,6 +36,7 @@ type LockedState = {
   readonly phase: "red" | "green";
   readonly title: string;
   readonly line: number;
+  readonly baseline: string;
   readonly locked: Fingerprints;
   readonly tree: Fingerprints;
 };
@@ -126,6 +129,17 @@ const runTestFile = (path: string): PlaywrightReport | undefined => {
     : undefined;
   rmSync(outputDir, { recursive: true, force: true });
   return isReport(report) ? report : undefined;
+};
+
+const runWithEverythingUnskipped = (path: string): PlaywrightReport | undefined => {
+  const source = readFileSync(join(PROJECT_DIR, path), "utf8");
+  const scratch = join(PROJECT_DIR, SCRATCH_TEST_FILE);
+  writeFileSync(scratch, source.replaceAll("test.skip(", "test("));
+  try {
+    return runTestFile(SCRATCH_TEST_FILE);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
 };
 
 const emit = (output: object): never => {
@@ -221,6 +235,7 @@ const verifyChoosing = (state: ChoosingState): never => {
     phase: "red",
     title: red.title,
     line: unskip.line,
+    baseline,
     locked: { [path]: current },
     tree: state.tree,
   });
@@ -269,6 +284,20 @@ const beforeStop = (): never => {
   const green = judgeGreenTest({ report, line: state.line });
   if (!green.ok) {
     return failStop(green.reason);
+  }
+
+  const fullReport = path === undefined ? undefined : runWithEverythingUnskipped(path);
+  if (!fullReport) {
+    return failStop("The full-suite run produced no report, so the other tests are not verified.");
+  }
+
+  const suite = judgeFullSuite({
+    report: fullReport,
+    finishedLines: classifyTestLines(state.baseline).finished,
+    chosenLine: state.line,
+  });
+  if (!suite.ok) {
+    return failStop(suite.reason);
   }
 
   saveState({ ...state, phase: "green" });
