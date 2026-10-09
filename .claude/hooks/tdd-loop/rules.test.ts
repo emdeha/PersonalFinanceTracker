@@ -243,6 +243,7 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringContaining('"first" used to pass and now fails'),
+      coupledOnly: false,
     });
   });
 
@@ -254,6 +255,7 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringContaining('"third" passes but it was not the chosen test'),
+      coupledOnly: true,
     });
   });
 
@@ -267,6 +269,7 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringMatching(/"first".*"third"/s),
+      coupledOnly: false,
     });
   });
 
@@ -278,6 +281,7 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringContaining('"second" is the chosen test and does not pass'),
+      coupledOnly: false,
     });
   });
 
@@ -287,6 +291,7 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringContaining("line 1 did not run"),
+      coupledOnly: false,
     });
   });
 
@@ -301,13 +306,18 @@ describe("judging the full suite after the implementation", () => {
     expect(judge(report)).toEqual({
       ok: false,
       reason: expect.stringContaining('"row b" passes but it was not the chosen test'),
+      coupledOnly: true,
     });
   });
 
   it("rejects a run with errors", () => {
     const report = getSuiteReport(getPassingStep(), [{ message: "Build failed" }]);
 
-    expect(judge(report)).toEqual({ ok: false, reason: expect.stringContaining("Build failed") });
+    expect(judge(report)).toEqual({
+      ok: false,
+      reason: expect.stringContaining("Build failed"),
+      coupledOnly: false,
+    });
   });
 });
 

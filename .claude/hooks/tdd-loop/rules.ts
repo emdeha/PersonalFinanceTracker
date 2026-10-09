@@ -17,6 +17,10 @@ export type PlaywrightReport = {
 
 type Verdict<T> = ({ readonly ok: true } & T) | { readonly ok: false; readonly reason: string };
 
+export type SuiteVerdict =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: string; readonly coupledOnly: boolean };
+
 const SKIPPED_TEST = "test.skip(";
 const ACTIVE_TEST = "test(";
 
@@ -134,18 +138,19 @@ export const judgeFullSuite = ({
   report: PlaywrightReport;
   finishedLines: ReadonlyArray<number>;
   chosenLine: number;
-}): Verdict<object> => {
+}): SuiteVerdict => {
   if (report.errors.length > 0) {
     return {
       ok: false,
       reason: `The full-suite run reported errors: ${report.errors.map((error) => error.message).join("; ")}`,
+      coupledOnly: false,
     };
   }
 
   const specs = collectSpecs(report);
   const isFinished = (spec: PlaywrightSpec): boolean => finishedLines.includes(spec.line);
 
-  const problems = [
+  const otherProblems = [
     ...finishedLines
       .filter((line) => !specs.some((spec) => spec.line === line))
       .map((line) => `The finished test at line ${line} did not run.`),
@@ -155,15 +160,20 @@ export const judgeFullSuite = ({
     ...specs
       .filter((spec) => spec.line === chosenLine && !allPass(spec))
       .map((spec) => `"${spec.title}" is the chosen test and does not pass.`),
-    ...specs
-      .filter((spec) => !isFinished(spec) && spec.line !== chosenLine && hasStatus({ spec, status: "expected" }))
-      .map(
-        (spec) =>
-          `"${spec.title}" passes but it was not the chosen test. Remove the code that makes it pass.`,
-      ),
   ];
 
-  return problems.length === 0 ? { ok: true } : { ok: false, reason: problems.join(" ") };
+  const coupledProblems = specs
+    .filter((spec) => !isFinished(spec) && spec.line !== chosenLine && hasStatus({ spec, status: "expected" }))
+    .map(
+      (spec) =>
+        `"${spec.title}" passes but it was not the chosen test. Remove the code that makes it pass.`,
+    );
+
+  const problems = [...otherProblems, ...coupledProblems];
+
+  return problems.length === 0
+    ? { ok: true }
+    : { ok: false, reason: problems.join(" "), coupledOnly: otherProblems.length === 0 };
 };
 
 export const judgeGreenTest =({
