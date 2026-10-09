@@ -10,11 +10,11 @@ function App() {
 function Home() {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const [expense, setExpense] = useState<Expense | null>(null)
+  const [expenses, setExpenses] = useState<readonly Expense[]>([])
 
   const addExpense = (event: FormEvent) => {
     event.preventDefault()
-    setExpense({ name, amount })
+    setExpenses((current) => [...current, { name, amount }])
     setName('')
     setAmount('')
   }
@@ -34,11 +34,11 @@ function Home() {
         <button type="submit">Add</button>
       </form>
       <ul>
-        {expense && (
-          <li>
+        {expenses.map((expense, index) => (
+          <li key={index}>
             {expense.name} {expense.amount}
           </li>
-        )}
+        ))}
       </ul>
     </>
   )
