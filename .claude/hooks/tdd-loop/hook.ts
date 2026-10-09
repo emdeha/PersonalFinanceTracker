@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import {
   SCRATCH_TEST_FILE,
+  judgeGreenTest,
   judgeRedTest,
   verifyNoImplementationBeforeRed,
   verifyOnlyImplementationChanged,
@@ -16,24 +17,28 @@ type HookInput = {
   readonly hook_event_name: string;
   readonly session_id: string;
   readonly agent_id?: string;
-  readonly tool_name: string;
-  readonly tool_input: { readonly file_path?: string; readonly command?: string };
+  readonly stop_hook_active?: boolean;
+  readonly tool_name?: string;
+  readonly tool_input?: { readonly file_path?: string; readonly command?: string };
 };
 
 type Fingerprints = Readonly<Record<string, string>>;
 
-type StepState =
-  | {
-      readonly phase: "choosing";
-      readonly baselines: Fingerprints;
-      readonly tree: Fingerprints;
-    }
-  | {
-      readonly phase: "red";
-      readonly title: string;
-      readonly locked: Fingerprints;
-      readonly tree: Fingerprints;
-    };
+type ChoosingState = {
+  readonly phase: "choosing";
+  readonly baselines: Fingerprints;
+  readonly tree: Fingerprints;
+};
+
+type LockedState = {
+  readonly phase: "red" | "green";
+  readonly title: string;
+  readonly line: number;
+  readonly locked: Fingerprints;
+  readonly tree: Fingerprints;
+};
+
+type StepState = ChoosingState | LockedState;
 
 const PROJECT_DIR = resolve(process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
 const COMPONENT_TEST_PATTERN = /\.ct\.tsx$/;
@@ -142,13 +147,13 @@ const block = (reason: string): never => emit({ decision: "block", reason });
 const inform = (additionalContext: string): never =>
   emit({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext } });
 
-const isProductionEdit = (): boolean =>
-  FILE_EDIT_TOOLS.includes(input.tool_name) &&
-  !COMPONENT_TEST_PATTERN.test(input.tool_input.file_path ?? "");
+const editedPath = (): string => input.tool_input?.file_path ?? "";
 
-const isTestEdit = (): boolean =>
-  FILE_EDIT_TOOLS.includes(input.tool_name) &&
-  COMPONENT_TEST_PATTERN.test(input.tool_input.file_path ?? "");
+const isFileEdit = (): boolean => FILE_EDIT_TOOLS.includes(input.tool_name ?? "");
+
+const isProductionEdit = (): boolean => isFileEdit() && !COMPONENT_TEST_PATTERN.test(editedPath());
+
+const isTestEdit = (): boolean => isFileEdit() && COMPONENT_TEST_PATTERN.test(editedPath());
 
 const beforeTool = (): never => {
   const state: StepState = loadState() ?? {
@@ -164,12 +169,12 @@ const beforeTool = (): never => {
     );
   }
 
-  if (state.phase === "red" && isTestEdit()) {
-    return deny("The chosen test is locked in its red state. Implement the code, not the test.");
+  if (state.phase !== "choosing" && isTestEdit()) {
+    return deny("The chosen test is locked. Implement the code, not the test.");
   }
 
-  if (state.phase === "red" && isProductionEdit()) {
-    const edited = relative(PROJECT_DIR, resolve(PROJECT_DIR, input.tool_input.file_path ?? ""));
+  if (state.phase !== "choosing" && isProductionEdit()) {
+    const edited = relative(PROJECT_DIR, resolve(PROJECT_DIR, editedPath()));
     const verdict = verifyOnlyImplementationChanged({ changed: [edited] });
     return verdict.ok ? emit({}) : deny(verdict.reason);
   }
@@ -177,7 +182,7 @@ const beforeTool = (): never => {
   return emit({});
 };
 
-const verifyChoosing = (state: Extract<StepState, { phase: "choosing" }>): never => {
+const verifyChoosing = (state: ChoosingState): never => {
   const premature = verifyNoImplementationBeforeRed({
     changed: changedInWorkingTree(state.tree),
   });
@@ -212,11 +217,17 @@ const verifyChoosing = (state: Extract<StepState, { phase: "choosing" }>): never
     return block(red.reason);
   }
 
-  saveState({ phase: "red", title: red.title, locked: { [path]: current }, tree: state.tree });
+  saveState({
+    phase: "red",
+    title: red.title,
+    line: unskip.line,
+    locked: { [path]: current },
+    tree: state.tree,
+  });
   return inform(`Red verified: "${red.title}" fails. You may now implement the minimum code to make it pass.`);
 };
 
-const verifyRed = (state: Extract<StepState, { phase: "red" }>): never => {
+const verifyLocked = (state: LockedState): never => {
   const implementationOnly = verifyOnlyImplementationChanged({
     changed: changedInWorkingTree(state.tree),
   });
@@ -235,8 +246,40 @@ const afterTool = (): never => {
   if (!state) {
     return emit({});
   }
-  return state.phase === "choosing" ? verifyChoosing(state) : verifyRed(state);
+  return state.phase === "choosing" ? verifyChoosing(state) : verifyLocked(state);
 };
+
+const beforeStop = (): never => {
+  const state = loadState();
+  if (!state || state.phase !== "red") {
+    return emit({});
+  }
+
+  const failStop = (reason: string): never =>
+    input.stop_hook_active
+      ? emit({ systemMessage: `Stopped while "${state.title}" is still red: ${reason}` })
+      : block(reason);
+
+  const [path] = Object.keys(state.locked);
+  const report = path === undefined ? undefined : runTestFile(path);
+  if (!report) {
+    return failStop("The test run produced no report, so the chosen test is not verified green.");
+  }
+
+  const green = judgeGreenTest({ report, line: state.line });
+  if (!green.ok) {
+    return failStop(green.reason);
+  }
+
+  saveState({ ...state, phase: "green" });
+  return emit({});
+};
+
+const isStopEvent = (): boolean => ["Stop", "SubagentStop"].includes(input.hook_event_name);
+
+if (isStopEvent()) {
+  beforeStop();
+}
 
 if (input.hook_event_name === "PreToolUse") {
   beforeTool();

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   collectSpecs,
   isImplementationFile,
+  judgeGreenTest,
   judgeRedTest,
   verifyNoImplementationBeforeRed,
   verifyOnlyImplementationChanged,
@@ -129,6 +130,54 @@ describe("judging that the unskipped test is red", () => {
 
   it("rejects when the test did not run at all", () => {
     const result = judgeRedTest({ report: getMockReport({ suites: [] }), line: 2 });
+
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("judging that the chosen test is green", () => {
+  const getGreenReport = (status: string): PlaywrightReport =>
+    getMockReport({
+      suites: [
+        {
+          title: "feature",
+          specs: [{ title: "second", line: 2, tests: [{ status }] }],
+        },
+      ],
+    });
+
+  it("accepts when the chosen test passes", () => {
+    expect(judgeGreenTest({ report: getGreenReport("expected"), line: 2 })).toEqual({
+      ok: true,
+      title: "second",
+    });
+  });
+
+  it("rejects when the chosen test still fails", () => {
+    const result = judgeGreenTest({ report: getGreenReport("unexpected"), line: 2 });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: expect.stringContaining('"second" still fails'),
+    });
+  });
+
+  it("rejects when the chosen test is skipped again", () => {
+    const result = judgeGreenTest({ report: getGreenReport("skipped"), line: 2 });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects when the run had errors", () => {
+    const report = getMockReport({ errors: [{ message: "Build failed" }] });
+
+    const result = judgeGreenTest({ report, line: 2 });
+
+    expect(result).toEqual({ ok: false, reason: expect.stringContaining("Build failed") });
+  });
+
+  it("rejects when the chosen test did not run at all", () => {
+    const result = judgeGreenTest({ report: getMockReport({ suites: [] }), line: 2 });
 
     expect(result.ok).toBe(false);
   });

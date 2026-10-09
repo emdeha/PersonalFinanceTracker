@@ -107,7 +107,39 @@ export const collectSpecs = (report: PlaywrightReport): ReadonlyArray<Playwright
 const hasStatus = ({ spec, status }: { spec: PlaywrightSpec; status: string }): boolean =>
   spec.tests.some((test) => test.status === status);
 
-export const judgeRedTest = ({
+export const judgeGreenTest = ({
+  report,
+  line,
+}: {
+  report: PlaywrightReport;
+  line: number;
+}): Verdict<{ title: string }> => {
+  if (report.errors.length > 0) {
+    return {
+      ok: false,
+      reason: `The test run reported errors: ${report.errors.map((error) => error.message).join("; ")}`,
+    };
+  }
+
+  const chosen = collectSpecs(report).find((spec) => spec.line === line);
+
+  if (!chosen) {
+    return { ok: false, reason: `The chosen test (line ${line}) did not run.` };
+  }
+
+  if (hasStatus({ spec: chosen, status: "unexpected" })) {
+    return {
+      ok: false,
+      reason: `"${chosen.title}" still fails. Keep implementing until it passes, then finish.`,
+    };
+  }
+
+  return chosen.tests.every((test) => test.status === "expected")
+    ? { ok: true, title: chosen.title }
+    : { ok: false, reason: `"${chosen.title}" did not pass. Keep it unskipped and make it pass.` };
+};
+
+export const judgeRedTest =({
   report,
   line,
 }: {
