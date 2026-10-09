@@ -37,7 +37,7 @@ test.describe("Add an expense by name and amount", () => {
     await expectExpenseRow(page, { name: "Coffee", amount: "5" });
   });
 
-  test.skip("clears the input fields after adding an expense", async ({ page }) => {
+  test("clears the input fields after adding an expense", async ({ page }) => {
     await nameField(page).fill("Coffee");
     await amountField(page).fill("5");
 
