@@ -13,7 +13,7 @@
 - Keep `@playwright/test` pinned to the exact version of `@playwright/experimental-ct-react` (currently 1.62.1). A mismatch breaks the browser lookup.
 - Keep timeouts tight (test 5s, expect 2s, action 2s) so failing tests fail fast. Raise them only for a test that genuinely needs longer.
 - Derive one test per scenario in `features/*.feature`; a Scenario Outline becomes one test per Examples row.
-- Locate elements by label, role and visible text (`getByLabel`, `getByRole`, `getByText`), never by CSS class or test id. The form must expose the labels "Name" and "Amount", an "Add" button, expense rows as `listitem`, and validation errors as visible text.
+- Locate elements by label, role and visible text (`getByLabel`, `getByRole`, `getByText`), never by CSS class or test id. The form must expose the labels "Name" and "Amount", a "Type" select with the options "Expense" and "Income" (option values equal their labels), an "Add" button, expense rows as `listitem`, and validation errors as visible text.
 - Install the browser once with `npx playwright install chromium`. If `~/.npm` has permission errors, pass `--cache "$TMPDIR/npm-cache"` to npm.
 
 ## TDD steps

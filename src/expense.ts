@@ -1,7 +1,13 @@
+export type ExpenseType = 'Expense' | 'Income'
+
+export const parseExpenseType = (value: string): ExpenseType =>
+  value === 'Income' ? 'Income' : 'Expense'
+
 export type Expense = {
   readonly name: string
   readonly amount: string
   readonly category: string
+  readonly type: ExpenseType
 }
 
 export type ParsedExpense =
@@ -12,16 +18,20 @@ type ParseExpenseOptions = {
   readonly name: string
   readonly amount: string
   readonly category: string
+  readonly type: ExpenseType
 }
 
 const rejected = (error: string): ParsedExpense => ({ ok: false, error })
 
-export const parseExpense = ({ name, amount, category }: ParseExpenseOptions): ParsedExpense => {
+export const parseExpense = ({ name, amount, category, type }: ParseExpenseOptions): ParsedExpense => {
   const trimmedName = name.trim()
   const trimmedAmount = amount.trim()
   if (trimmedName === '') return rejected('Name is required')
   if (trimmedAmount === '') return rejected('Amount is required')
   if (Number.isNaN(Number(trimmedAmount))) return rejected('Amount must be a number')
   if (Number(trimmedAmount) <= 0) return rejected('Amount must be greater than 0')
-  return { ok: true, expense: { name: trimmedName, amount: trimmedAmount, category: category.trim() } }
+  return {
+    ok: true,
+    expense: { name: trimmedName, amount: trimmedAmount, category: category.trim(), type },
+  }
 }
