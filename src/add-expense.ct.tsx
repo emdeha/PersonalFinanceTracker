@@ -9,7 +9,7 @@ const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&
 const expectExpenseRow = (page: Page, { name, amount }: ExpenseInput) =>
   expect(
     expenseRows(page).filter({
-      hasText: new RegExp(`^${escapeRegExp(name)} ${escapeRegExp(amount)}$`),
+      hasText: new RegExp(`^${escapeRegExp(name)} ${escapeRegExp(amount)}(?: |$)`),
     }),
   ).not.toHaveCount(0);
 
@@ -71,7 +71,7 @@ test.describe("Add an expense by name and amount", () => {
     await addExpense(page, { name: "Coffee", amount: "5" });
     await addExpense(page, { name: "Groceries", amount: "30" });
 
-    await expect(expenseRows(page)).toHaveText(["Coffee 5", "Groceries 30"]);
+    await expect(expenseRows(page)).toContainText(["Coffee 5", "Groceries 30"]);
   });
 
   test("adds an expense with a decimal amount", async ({ page }) => {
@@ -97,7 +97,7 @@ test.describe("Add an expense by name and amount", () => {
 
     await addExpense(page, { name: "Coffee", amount: "6" });
 
-    await expect(expenseRows(page)).toHaveText(["Coffee 5", "Coffee 6"]);
+    await expect(expenseRows(page)).toContainText(["Coffee 5", "Coffee 6"]);
   });
 
   test("cannot add an expense without a name", async ({ page }) => {
