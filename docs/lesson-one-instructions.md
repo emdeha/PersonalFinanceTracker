@@ -22,6 +22,5 @@
         5. Notice that when "adds multiple expenses" is implemented the hooks might decide not to be called
         6. Notice that the state doesn't get cleaned between agent invocations
 5. Continue until all is implemented and observe how well does Claude keep the flow. Add modifications to CLAUDE.md
-Next >> 6. After the first pass, encode this flow in CLAUDE.md - use https://claude.ai/share/50aa04d6-2bcd-4326-bcca-e9a2865f4cdd as an example how to extract relevant info to build a skill
-7. Next step - add category. But before you start it out - encode the BDD workflow into a skill and start using it (steps 1 to 4)
-8. Add a Gherkin review agent (based on some good resource on BDD) + a code review agent (based on a good resource on code review)
+6. Next step - add category. But before you start it out - encode the BDD workflow into a skill and start using it (steps 1 to 4)
+7. Add a Gherkin review agent (based on some good resource on BDD) + a code review agent (based on a good resource on code review)
