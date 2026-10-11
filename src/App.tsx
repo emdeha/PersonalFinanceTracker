@@ -1,13 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import './App.css'
-
-type Expense = { readonly name: string; readonly amount: string }
+import { parseExpense, type Expense } from './expense'
 
 function App() {
-  return <Home />
-}
-
-function Home() {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
@@ -15,23 +10,12 @@ function Home() {
 
   const addExpense = (event: FormEvent) => {
     event.preventDefault()
-    if (name.trim() === '') {
-      setError('Name is required')
+    const result = parseExpense({ name, amount })
+    if (!result.ok) {
+      setError(result.error)
       return
     }
-    if (amount === '') {
-      setError('Amount is required')
-      return
-    }
-    if (Number.isNaN(Number(amount))) {
-      setError('Amount must be a number')
-      return
-    }
-    if (Number(amount) <= 0) {
-      setError('Amount must be greater than 0')
-      return
-    }
-    setExpenses((current) => [...current, { name: name.trim(), amount }])
+    setExpenses((current) => [...current, result.expense])
     setName('')
     setAmount('')
     setError('')
@@ -39,7 +23,6 @@ function Home() {
 
   return (
     <>
-      <div>Home</div>
       <form onSubmit={addExpense}>
         <label>
           Name

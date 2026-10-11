@@ -51,6 +51,10 @@ Feature: Add an expense by name and amount
     Then I see the error "Name is required"
     And no expense row is added
 
+  Scenario: Surrounding whitespace is trimmed from the amount
+    When I add an expense named "Coffee" with amount " 5 "
+    Then I see an expense row with name "Coffee" and amount "5"
+
   Scenario: Cannot add an expense with a whitespace-only name
     When I add an expense named "   " with amount "5"
     Then I see the error "Name is required"
@@ -59,6 +63,11 @@ Feature: Add an expense by name and amount
   Scenario: Cannot add an expense without an amount
     When I enter "Coffee" in the name field
     And I click "Add"
+    Then I see the error "Amount is required"
+    And no expense row is added
+
+  Scenario: Cannot add an expense with a whitespace-only amount
+    When I add an expense named "Coffee" with amount "   "
     Then I see the error "Amount is required"
     And no expense row is added
 
@@ -73,10 +82,18 @@ Feature: Add an expense by name and amount
       | 0      | Amount must be greater than 0 |
       | -5     | Amount must be greater than 0 |
 
-  Scenario: Entered values are kept when validation fails
-    Given I have entered "Coffee" in the name field
+  Scenario Outline: Entered values are kept when validation fails
+    Given I have entered "<name>" in the name field
+    And I have entered "<amount>" in the amount field
     When I click "Add"
-    Then the name field contains "Coffee"
+    Then the name field contains "<name>"
+    And the amount field contains "<amount>"
+
+    Examples:
+      | name   | amount |
+      | Coffee | abc    |
+      | Coffee |        |
+      |        | 5      |
 
   Scenario: The error disappears after a successful add
     Given I tried to add an expense without a name
