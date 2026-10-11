@@ -311,7 +311,7 @@ const lockedViolation = (state: LockedState): string | undefined => {
     return implementationOnly.reason;
   }
 
-  const changed = changedFiles(state.locked);
+  const changed = changedFiles(state.locked).filter((path) => path in state.locked);
   return changed.length === 0
     ? undefined
     : `The chosen test is locked, but ${changed.join(", ")} changed. Revert it.`;
