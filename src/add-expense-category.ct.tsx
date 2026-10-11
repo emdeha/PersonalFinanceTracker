@@ -11,7 +11,7 @@ test.describe("Categorize an expense", () => {
   test("adds an expense with a category", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5", category: "Food" });
 
-    await expect(expenseRows(page)).toContainText(["Coffee 5 (Food)"]);
+    await expect(expenseRows(page)).toHaveText(["Coffee 5 (Food) Expense"]);
     await expect(categoryField(page)).toHaveValue("");
   });
 
@@ -19,6 +19,6 @@ test.describe("Categorize an expense", () => {
     await addExpense(page, { name: "Coffee", amount: "5", category: "  Food  " });
     await addExpense(page, { name: "Bus", amount: "3", category: "   " });
 
-    await expect(expenseRows(page)).toContainText(["Coffee 5 (Food)", "Bus 3"]);
+    await expect(expenseRows(page)).toHaveText(["Coffee 5 (Food) Expense", "Bus 3 Expense"]);
   });
 });

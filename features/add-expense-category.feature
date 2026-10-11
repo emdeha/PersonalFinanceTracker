@@ -11,7 +11,7 @@ Feature: Categorize an expense
 
     Scenario: Add an expense with a category
       When I add an expense named "Coffee" with amount "5" and category "Food"
-      Then I see an expense row starting with "Coffee 5 (Food)"
+      Then I see an expense row "Coffee 5 (Food) Expense"
       And the category field is empty
 
   Rule: Surrounding whitespace in the category is ignored
@@ -19,5 +19,5 @@ Feature: Categorize an expense
     Scenario: Surrounding whitespace is trimmed from the category
       When I add an expense named "Coffee" with amount "5" and category "  Food  "
       And I add an expense named "Bus" with amount "3" and category "   "
-      Then the first expense row starts with "Coffee 5 (Food)"
-      And the second expense row starts with "Bus 3"
+      Then the first expense row is "Coffee 5 (Food) Expense"
+      And the second expense row is "Bus 3 Expense"

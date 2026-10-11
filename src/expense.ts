@@ -14,16 +14,9 @@ export type ParsedExpense =
   | { readonly ok: true; readonly expense: Expense }
   | { readonly ok: false; readonly error: string }
 
-type ParseExpenseOptions = {
-  readonly name: string
-  readonly amount: string
-  readonly category: string
-  readonly type: ExpenseType
-}
-
 const rejected = (error: string): ParsedExpense => ({ ok: false, error })
 
-export const parseExpense = ({ name, amount, category, type }: ParseExpenseOptions): ParsedExpense => {
+export const parseExpense = ({ name, amount, category, type }: Expense): ParsedExpense => {
   const trimmedName = name.trim()
   const trimmedAmount = amount.trim()
   if (trimmedName === '') return rejected('Name is required')
