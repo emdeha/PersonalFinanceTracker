@@ -23,7 +23,8 @@
         6. Notice that the state doesn't get cleaned between agent invocations
 5. Continue until all is implemented and observe how well does Claude keep the flow. Add modifications to CLAUDE.md
 6. Next step - add category. But before you start it out - encode the BDD workflow into a skill and start using it (steps 1 to 4)
-7. Add a Gherkin review agent (based on some good resource on BDD) + a code review agent (based on a good resource on code review). Do the review + 
+7. Add a Gherkin review agent (based on some good resource on BDD) + a code review agent (based on a good resource on code review). Do the reviews and resolve issues.
+    1. Make sure the code reviewer catches a mutation that's an invalid finding and then rewrite the skill (see the saved Claude Code run)
 8. Start the category adding after the tests have been written.
 	1. In a separate worktree
 	2. Talk a bit about Supacode and other similar tools
