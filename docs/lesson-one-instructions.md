@@ -29,4 +29,5 @@
 	1. In a separate worktree
 	2. Talk a bit about Supacode and other similar tools
 	3. Until the red-green agent does them, spin up a separate worktree to work on the next functionality
-9. Once the first is done, show how you'll approach merging the two diverging implementations
+9. Draw the graphs and loops that are resulting from this
+10. Once the first is done, show how you'll approach merging the two diverging implementations
