@@ -19,3 +19,5 @@ Chronological by creation time. Each folder holds `transcript.jsonl` (raw sessio
 | 14 | [part-3-worktrees-1-implement-add-category](14-part-3-worktrees-1-implement-add-category/brief.md) | named | `6d9e3bb7-6da6-464a-903e-5cc4e899ad1a` | 2026-10-11T11:52:19.382Z | 2026-10-11T12:08:34.539Z | 5 |
 | 13 | [part-3-worktrees-1-implement-add-category-review](13-part-3-worktrees-1-implement-add-category-review/brief.md) | named | `614942b2-d42b-4a07-8a8a-27bfd806b7e4` | 2026-10-11T12:07:07.099Z | 2026-10-11T12:09:10.224Z | 1 |
 | 15 | [part-3-merge-changes](15-part-3-merge-changes/brief.md) | named | `56be3878-ecc2-4c60-a5ac-9e996120e7d8` | 2026-10-11T12:16:14.134Z | 2026-10-11T12:25:00.158Z | 5 |
+| 16 | [part-3-worktrees-2-implement-add-type](16-part-3-worktrees-2-implement-add-type/brief.md) | named | `3abfb4dc-a96a-4e96-9672-f50cb4f501c9` | 2026-10-11T11:53:02.580Z | 2026-10-11T12:14:05.107Z | 7 |
+| 17 | [part-3-worktrees-2-implement-add-type-review](17-part-3-worktrees-2-implement-add-type-review/brief.md) | named | `7973eef5-ebde-47cc-b160-07e631382e17` | 2026-10-11T12:14:40.255Z | 2026-10-11T12:17:58.340Z | 2 |
