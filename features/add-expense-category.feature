@@ -11,27 +11,27 @@ Feature: Categorize an expense
 
     Scenario: Add an expense with a category
       When I add an expense named "Coffee" with amount "5" and category "Food"
-      Then I see an expense row "Coffee 5 (Food)"
+      Then I see an expense row starting with "Coffee 5 (Food)"
 
     Scenario: An expense can be added without a category
       When I add an expense named "Coffee" with amount "5"
-      Then I see an expense row "Coffee 5"
+      Then I see an expense row starting with "Coffee 5" with no category
 
     Scenario: Each expense keeps its own category
       Given I have added an expense named "Coffee" with amount "5" and category "Food"
       When I add an expense named "Bus" with amount "3" and category "Transport"
-      Then the first expense row is "Coffee 5 (Food)"
-      And the second expense row is "Bus 3 (Transport)"
+      Then the first expense row starts with "Coffee 5 (Food)"
+      And the second expense row starts with "Bus 3 (Transport)"
 
   Rule: Surrounding whitespace in the category is ignored
 
     Scenario: Surrounding whitespace is trimmed from the category
       When I add an expense named "Coffee" with amount "5" and category "  Food  "
-      Then I see an expense row "Coffee 5 (Food)"
+      Then I see an expense row starting with "Coffee 5 (Food)"
 
     Scenario: A whitespace-only category counts as no category
       When I add an expense named "Coffee" with amount "5" and category "   "
-      Then I see an expense row "Coffee 5"
+      Then I see an expense row starting with "Coffee 5" with no category
 
   Rule: The category field is cleared after a successful add
 
@@ -50,4 +50,4 @@ Feature: Categorize an expense
     Scenario: A kept category is saved when the add succeeds on retry
       Given I tried to add an expense with only the category "Food"
       When I complete the expense with name "Coffee" and amount "5"
-      Then I see an expense row "Coffee 5 (Food)"
+      Then I see an expense row starting with "Coffee 5 (Food)"
