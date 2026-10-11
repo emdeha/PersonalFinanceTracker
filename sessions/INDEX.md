@@ -18,3 +18,4 @@ Chronological by creation time. Each folder holds `transcript.jsonl` (raw sessio
 | 12 | [part-2-extracting-bdd-and-next-iteration-2-code-review-agent](12-part-2-extracting-bdd-and-next-iteration-2-code-review-agent/brief.md) | named | `ecd1f190-61ae-4f7f-930f-f3fce7447d38` | 2026-10-11T11:29:59.611Z | 2026-10-11T11:49:01.720Z | 8 |
 | 14 | [part-3-worktrees-1-implement-add-category](14-part-3-worktrees-1-implement-add-category/brief.md) | named | `6d9e3bb7-6da6-464a-903e-5cc4e899ad1a` | 2026-10-11T11:52:19.382Z | 2026-10-11T12:08:34.539Z | 5 |
 | 13 | [part-3-worktrees-1-implement-add-category-review](13-part-3-worktrees-1-implement-add-category-review/brief.md) | named | `614942b2-d42b-4a07-8a8a-27bfd806b7e4` | 2026-10-11T12:07:07.099Z | 2026-10-11T12:09:10.224Z | 1 |
+| 15 | [part-3-merge-changes](15-part-3-merge-changes/brief.md) | named | `56be3878-ecc2-4c60-a5ac-9e996120e7d8` | 2026-10-11T12:16:14.134Z | 2026-10-11T12:25:00.158Z | 5 |
