@@ -1,5 +1,8 @@
 export type ExpenseType = 'Expense' | 'Income'
 
+export const parseExpenseType = (value: string): ExpenseType =>
+  value === 'Income' ? 'Income' : 'Expense'
+
 export type Expense = {
   readonly name: string
   readonly amount: string

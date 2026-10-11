@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import './App.css'
-import { parseExpense, type Expense, type ExpenseType } from './expense'
+import { parseExpense, parseExpenseType, type Expense, type ExpenseType } from './expense'
 
 function App() {
   const [name, setName] = useState('')
@@ -38,7 +38,7 @@ function App() {
           Type
           <select
             value={type}
-            onChange={(event) => setType(event.target.value === 'Income' ? 'Income' : 'Expense')}
+            onChange={(event) => setType(parseExpenseType(event.target.value))}
           >
             <option>Expense</option>
             <option>Income</option>

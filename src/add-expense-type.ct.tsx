@@ -10,7 +10,7 @@ import {
   typeField,
 } from "./expense-page";
 
-test.describe("Mark an entry as expense or income", () => {
+test.describe("Mark an expense as expense or income", () => {
   test.beforeEach(async ({ mount }) => {
     await mount(<App />);
   });
