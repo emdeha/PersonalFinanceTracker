@@ -6,7 +6,7 @@ from pathlib import Path
 
 SESSIONS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SESSIONS_DIR.parent
-DEFAULT_SOURCE = Path.home() / ".claude" / "projects" / str(PROJECT_ROOT).replace("/", "-")
+DEFAULT_SOURCE = Path.home() / ".claude" / "projects" / re.sub(r"[/.]", "-", str(PROJECT_ROOT))
 SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SOURCE
 
 
