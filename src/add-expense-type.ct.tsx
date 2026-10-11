@@ -15,7 +15,7 @@ test.describe("Mark an entry as expense or income", () => {
     await mount(<App />);
   });
 
-  test.skip("adds an expense without choosing a type as an expense", async ({ page }) => {
+  test("adds an expense without choosing a type as an expense", async ({ page }) => {
     await addExpense(page, { name: "Coffee", amount: "5" });
 
     await expect(expenseRows(page)).toHaveText(["Coffee 5 Expense"]);
@@ -27,23 +27,23 @@ test.describe("Mark an entry as expense or income", () => {
     await expect(expenseRows(page)).toHaveText(["Salary 3000 (Work) Income"]);
   });
 
-  test.skip("adds an income", async ({ page }) => {
+  test("adds an income", async ({ page }) => {
     await addExpense(page, { name: "Salary", amount: "3000", type: "Income" });
 
     await expect(expenseRows(page)).toHaveText(["Salary 3000 Income"]);
   });
 
-  test.skip("selects Expense when the form opens", async ({ page }) => {
+  test("selects Expense when the form opens", async ({ page }) => {
     await expect(typeField(page)).toHaveValue("Expense");
   });
 
-  test.skip("returns the type to Expense after adding an expense", async ({ page }) => {
+  test("returns the type to Expense after adding an expense", async ({ page }) => {
     await addExpense(page, { name: "Salary", amount: "3000", type: "Income" });
 
     await expect(typeField(page)).toHaveValue("Expense");
   });
 
-  test.skip("does not carry a chosen type over to the next expense", async ({ page }) => {
+  test("does not carry a chosen type over to the next expense", async ({ page }) => {
     await addExpense(page, { name: "Salary", amount: "3000", type: "Income" });
 
     await addExpense(page, { name: "Coffee", amount: "5" });
@@ -51,7 +51,7 @@ test.describe("Mark an entry as expense or income", () => {
     await expect(expenseRows(page)).toHaveText(["Salary 3000 Income", "Coffee 5 Expense"]);
   });
 
-  test.skip("keeps the type when validation fails", async ({ page }) => {
+  test("keeps the type when validation fails", async ({ page }) => {
     await typeField(page).selectOption("Income");
 
     await clickAdd(page);
@@ -60,7 +60,7 @@ test.describe("Mark an entry as expense or income", () => {
     await expect(typeField(page)).toHaveValue("Income");
   });
 
-  test.skip("saves a kept type when the add succeeds on retry", async ({ page }) => {
+  test("saves a kept type when the add succeeds on retry", async ({ page }) => {
     await typeField(page).selectOption("Income");
     await clickAdd(page);
 
