@@ -85,6 +85,8 @@ Finish by reporting:
 - the open questions and "Not now" items
 - the first test to drive, which should be the walking-skeleton scenario
 
+Before any implementation, suggest an independent review of the result with the `bdd-reviewer` agent (skill `review-bdd-scenarios`). Fix its blocking findings first.
+
 Then suggest running `red-green-step`, or the `red-green-implementer` agent, one scenario at a time. Do not write production code in this skill. A scenario must fail for a missing behaviour before anyone implements it.
 
 ## Anti-patterns to refuse
