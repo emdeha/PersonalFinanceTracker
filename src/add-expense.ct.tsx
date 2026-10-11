@@ -2,20 +2,7 @@ import { expect, test } from "@playwright/experimental-ct-react";
 import type { Page } from "@playwright/test";
 
 import App from "./App";
-
-type ExpenseInput = { name: string; amount: string };
-
-const nameField = (page: Page) => page.getByLabel("Name");
-const amountField = (page: Page) => page.getByLabel("Amount");
-const expenseRows = (page: Page) => page.getByRole("listitem");
-
-const clickAdd = (page: Page) => page.getByRole("button", { name: "Add" }).click();
-
-const addExpense = async (page: Page, { name, amount }: ExpenseInput) => {
-  await nameField(page).fill(name);
-  await amountField(page).fill(amount);
-  await clickAdd(page);
-};
+import { addExpense, amountField, clickAdd, expenseRows, nameField, type ExpenseInput } from "./expense-page";
 
 const expectExpenseRow = (page: Page, { name, amount }: ExpenseInput) =>
   expect(
