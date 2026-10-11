@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-export type ExpenseType = "Expense" | "Income";
+import type { ExpenseType } from "./expense";
 
 export type ExpenseInput = { name: string; amount: string; category?: string; type?: ExpenseType };
 
