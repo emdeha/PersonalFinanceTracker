@@ -39,9 +39,9 @@ Every recorded session in `sessions/` has a git tag, `snap/NN-...`, on the last 
 ## Use a snapshot
 
 1. List the snapshots: `git tag -l 'snap/*'`
-2. Look at one without moving the branch: `git checkout snap/08-part-1-agent-follows-properly`, then `git switch run-1` to come back.
+2. Look at one without moving the branch: `git checkout snap/08-part-1-agent-follows-properly`, then `git switch ai-native-workflows-snapshots` to come back.
 3. Continue the demo from it: `git reset --hard snap/08-part-1-agent-follows-properly`. This discards uncommitted work.
-4. Start a fresh attempt without touching `run-1`: `git switch -c demo-retry snap/08-part-1-agent-follows-properly`
+4. Start a fresh attempt without touching `ai-native-workflows-snapshots`: `git switch -c demo-retry snap/08-part-1-agent-follows-properly`
 
 ## Which snapshot for which step
 
@@ -64,7 +64,7 @@ Every recorded session in `sessions/` has a git tag, `snap/NN-...`, on the last 
 | 8 | `snap/14-part-3-add-category` | Categories implemented (add-category worktree) |
 | 8 | `snap/15-part-3-add-type` | Type implemented (add-type worktree) |
 | 8 | `snap/16-part-3-add-type-review` | Type refactored after review |
-| 10 | `snap/17-part-3-merge-changes` | Both branches merged into `run-1` |
+| 10 | `snap/17-part-3-merge-changes` | Both branches merged into `ai-native-workflows-snapshots` |
 
 Snapshots 13 to 16 sit on the parallel add-category and add-type work, so checking one out leaves you on a detached head. Use step 4 of "Use a snapshot" to turn it into a branch.
 
