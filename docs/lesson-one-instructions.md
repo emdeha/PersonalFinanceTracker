@@ -38,10 +38,19 @@ Every recorded session in `sessions/` has a git tag, `snap/NN-...`, on the last 
 
 ## Use a snapshot
 
-1. List the snapshots: `git tag -l 'snap/*'`
-2. Look at one without moving the branch: `git checkout snap/08-part-1-agent-follows-properly`, then `git switch ai-native-workflows-snapshots` to come back.
-3. Continue the demo from it: `git reset --hard snap/08-part-1-agent-follows-properly`. This discards uncommitted work.
-4. Start a fresh attempt without touching `ai-native-workflows-snapshots`: `git switch -c demo-retry snap/08-part-1-agent-follows-properly`
+Tags belong to the repository, not to a branch, so any snapshot can be reached from any branch. `master` is `snap/00-clean-slate`, so a demo started from `master` begins at snapshot 00.
+
+1. Start the demo on a scratch branch and keep `master` untouched: `git switch master`, then `git switch -c demo`
+2. List the snapshots: `git tag -l 'snap/*'`
+3. Jump the demo to a snapshot, discarding what is on `demo`: `git switch -C demo snap/08-part-1-agent-follows-properly`. Git refuses if uncommitted changes would be overwritten. Add `-f` to discard them.
+4. Keep the current attempt and still jump: `git switch -c demo-attempt-1`, then `git switch -C demo snap/08-part-1-agent-follows-properly`
+5. Move forward or back in any order: `git switch -C demo snap/03-part-1-first-red-green-loop`. Each tag is a full state of the project.
+6. Look without changing anything: `git diff snap/05-part-1-first-red-green-loop-test-1 snap/06-part-1-agent-bypasses-hooks --stat`
+7. Keep a second folder at a snapshot while the live demo runs: `git worktree add ../pft-snap08 snap/08-part-1-agent-follows-properly`
+
+Commit or `git stash` demo work before jumping. `-f` and `git reset --hard` discard uncommitted work.
+
+The full history, with every snapshot and merge, is on the `ai-native-workflows-snapshots` branch.
 
 ## Which snapshot for which step
 
@@ -66,9 +75,9 @@ Every recorded session in `sessions/` has a git tag, `snap/NN-...`, on the last 
 | 8 | `snap/16-part-3-add-type-review` | Type refactored after review |
 | 10 | `snap/17-part-3-merge-changes` | Both branches merged into `ai-native-workflows-snapshots` |
 
-Snapshots 13 to 16 sit on the parallel add-category and add-type work, so checking one out leaves you on a detached head. Use step 4 of "Use a snapshot" to turn it into a branch.
+Snapshots 13 to 16 sit on the parallel add-category and add-type work. Jump to them with `git switch -C demo snap/NN-...` like any other snapshot. Never switch the `add-category` or `add-type` branches themselves, because they are checked out in their own worktrees.
 
 ## Backups
 
 - `run-1-backup` holds the history as it was before the commit messages were rewritten. `git reset --hard run-1-backup` restores it.
-- If the tags are missing after a clone, fetch them with `git fetch origin 'refs/tags/snap/*:refs/tags/snap/*'`. That works only after the tags have been pushed.
+- The tags are pushed with the branch. If they are missing after a clone, fetch them with `git fetch origin 'refs/tags/snap/*:refs/tags/snap/*'`.
