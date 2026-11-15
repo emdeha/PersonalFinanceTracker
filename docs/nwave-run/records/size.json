@@ -1,0 +1,11 @@
+{
+  "declarations": [
+    {
+      "author": null,
+      "lowered_from": null,
+      "motivation": "One new user-visible behaviour delivered as a whole vertical slice: a new domain model for an expense and its amount, independent validation of two fields, and a new entry form and list on the existing page.",
+      "owner_note": null,
+      "size": "M"
+    }
+  ]
+}

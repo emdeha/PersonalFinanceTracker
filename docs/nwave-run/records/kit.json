@@ -1,0 +1,10 @@
+{
+  "commit": null,
+  "fingerprint": "3136d8ff64b46f92076ab9374de051a2a8db966dcdc5b460d9bec9bfa2edd282",
+  "parts": {
+    "schema": "7843e5e4e01de771aa749e25af2b69d520e65ebe3a5accff29babd2c51caa6ab",
+    "skills": "8361266270fbc46cf640661f8a27073e2b94dc1b828b884c7f5dbc1e2bece23c",
+    "source": "e64680ef69651969603aa434af25eeccf5ca503744561ba39af79535ad75f775",
+    "templates": "2ff375d587b8817a899bda883f8c8c78cc78c79d493a454a66de4d78bfaff087"
+  }
+}

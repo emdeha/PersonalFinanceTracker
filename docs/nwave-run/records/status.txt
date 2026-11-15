@@ -1,0 +1,11 @@
+mode: auto
+size: M - One new user-visible behaviour delivered as a whole vertical slice: a new domain model for an expense and its amount, independent validation of two fields, and a new entry form and list on the existing page.
+kit: 3136d8ff64b46f92076ab9374de051a2a8db966dcdc5b460d9bec9bfa2edd282 commit: none
+oracle         revisions=2 ok
+design         revisions=3 ok
+craft          revisions=2 ok
+selfreview     revisions=2 ok
+handoff        revisions=2 ok
+not due for size M: model, refactor, probe, examine
+candidate: commit:d81677514e86aa3c11cdc7b68ecce6383bef2ac4 frozen for review
+verdict: accepted by nw-software-crafter-reviewer for commit:d81677514e86aa3c11cdc7b68ecce6383bef2ac4
