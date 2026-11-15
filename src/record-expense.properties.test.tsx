@@ -9,16 +9,21 @@ import {
 
 const FIRST_SEED = 20261115;
 const RUNS = 8;
+const REFUSAL_RUNS = 16;
 const MAX_ENTRIES = 4;
 const MAX_CENTS = 999999;
 const SYLLABLES = ['ca', 'fe', 'bus', 'gym', 'ink', 'tax', 'lun', 'ch', 'pet', 'gas'];
 const REFUSALS = [
   'blank name',
+  'whitespace only name',
   'blank amount',
   'amount in words',
   'negative amount',
   'zero amount',
+  'amount with three decimals',
+  'amount beyond the largest',
 ] as const;
+const BEYOND_THE_LARGEST = '99999999999999999999.99';
 
 type Refusal = (typeof REFUSALS)[number];
 
@@ -55,10 +60,13 @@ const refusedEntry = (seed: number, refusal: Refusal): ExpenseEntry => {
   const amount = generatedAmount(nextSeed(seed));
   const refused: Record<Refusal, ExpenseEntry> = {
     'blank name': { name: '', amount },
+    'whitespace only name': { name: '   ', amount },
     'blank amount': { name, amount: '' },
     'amount in words': { name, amount: 'a lot' },
     'negative amount': { name, amount: `-${amount}` },
     'zero amount': { name, amount: '0.00' },
+    'amount with three decimals': { name, amount: `${amount}5` },
+    'amount beyond the largest': { name, amount: BEYOND_THE_LARGEST },
   };
   return refused[refusal];
 };
@@ -81,9 +89,9 @@ describe('ExpenseTrackerShould', () => {
 
   // LAW2: a refused entry leaves the expenses already recorded exactly as they were.
   it('keep_the_recorded_expenses_unchanged_for_any_refused_entry', async () => {
-    for (let run = 0; run < RUNS; run += 1) {
+    for (let run = 0; run < REFUSAL_RUNS; run += 1) {
       const seed = nextSeed(FIRST_SEED + run * 31);
-      const refusal = REFUSALS[pick(seed, REFUSALS.length)];
+      const refusal = REFUSALS[run % REFUSALS.length];
       const accepted = generatedEntries(seed);
       const user = openTheExpenseTracker();
       for (const entry of accepted) {
